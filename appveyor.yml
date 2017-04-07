@@ -1,0 +1,17 @@
+build: false
+
+environment:
+  matrix:
+    - PYTHON: "C:\\Python36_64"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "64"
+      CONDA_PY: "36"
+      CONDA_NPY: "112"
+
+install:
+  - powershell .\\ci\\appveyor-install.ps1
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "pip install --no-cache-dir -r ci/test-requirements.txt"
+
+test_script:
+  - pytest
