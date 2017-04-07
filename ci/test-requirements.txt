@@ -6,4 +6,4 @@ numpy
 pytest
 pytest-cov
 python-coveralls
--e git://github.com:brightway-lca/brightway-default-backend.git#egg=bw_default_backend
+-e git+https://github.com/brightway-lca/brightway-default-backend.git#egg=bw_default_backend
