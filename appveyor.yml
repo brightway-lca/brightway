@@ -1,17 +1,19 @@
-build: false
-
 environment:
   matrix:
-    - PYTHON: "C:\\Python36_64"
-      PYTHON_VERSION: "3.6"
+    - PYTHON_VERSION: "3.6"
       PYTHON_ARCH: "64"
       CONDA_PY: "36"
-      CONDA_NPY: "112"
+      CONDA_INSTALL_LOCN: "C:\\Miniconda36-x64"
 
 install:
-  - powershell .\\ci\\appveyor-install.ps1
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - "pip install --no-cache-dir -r ci/test-requirements.txt"
+    # Use the pre-installed Miniconda for the desired arch
+    - cmd: call %CONDA_INSTALL_LOCN%\Scripts\activate.bat
+    - cmd: conda update -y -q conda
+    - cmd: conda config --add channels conda-forge
+    - cmd: conda install -y -q appdirs numpy peewee pytest stevedore
+    - cmd: pip install --no-cache-dir -r ci/test-requirements.txt
+
+build: false
 
 test_script:
   - pytest
