@@ -16,13 +16,13 @@ class MockBackendConfig:
         self.dirpath = None
 
 
-config = MockBackendConfig()
-backend_mapping['tests'] = config
-
-
 @pytest.fixture
 def temp_projects(scope="function"):
     td = tempfile.mkdtemp()
+
+    config = MockBackendConfig()
+    backend_mapping['tests'] = config
+
     yield ProjectManager(td)
     if config.dirpath:
         config.deactivate()
