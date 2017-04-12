@@ -17,17 +17,13 @@ class MockBackendConfig:
 
 
 config = MockBackendConfig()
+backend_mapping['tests'] = config
 
 
 @pytest.fixture
 def temp_projects(scope="function"):
     td = tempfile.mkdtemp()
     yield ProjectManager(td)
+    if config.dirpath:
+        config.deactivate()
     shutil.rmtree(td)
-
-
-@pytest.fixture
-def augmented_mapping():
-    for key in list(backend_mapping):
-        del backend_mapping[key]
-    backend_mapping['tests'] = config
