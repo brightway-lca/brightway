@@ -7,13 +7,13 @@ import tempfile
 
 class MockBackendConfig:
     def __init__(self):
-        self.path = None
+        self.dirpath = None
 
     def activate(self, dirpath):
-        self.path = dirpath
+        self.dirpath = dirpath
 
     def deactivate(self):
-        self.path = None
+        self.dirpath = None
 
 
 config = MockBackendConfig()
