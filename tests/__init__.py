@@ -26,4 +26,8 @@ def temp_projects(scope="function"):
     yield ProjectManager(td)
     if config.dirpath:
         config.deactivate()
-    shutil.rmtree(td)
+    try:
+        shutil.rmtree(td)
+    except:
+        # Fails on Windows, but we can just leave it for now
+        pass
