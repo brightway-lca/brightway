@@ -4,6 +4,7 @@ from brightway import backend_mapping
 from brightway.projects import Project
 import os
 import platform
+import pytest
 
 windows = platform.system() == "Windows"
 
@@ -17,9 +18,6 @@ def test_setup(temp_projects):
     assert p.backend == 'tests'
     assert "projects.db" in os.listdir(temp_projects.base_dir)
 
-def test_create_project(temp_projects):
-    temp_projects.create("foo", backend="tests", switch=False)
-
 def test_select_project(temp_projects):
     temp_projects.create("foo", backend="tests", switch=False)
     temp_projects.select("foo")
@@ -31,6 +29,8 @@ def test_create_switch_project(temp_projects):
 
 def test_create_project(temp_projects):
     temp_projects.create("foo", backend="tests")
+    print(temp_projects.current)
+    print(temp_projects.dir)
     assert os.path.isdir(temp_projects.dir)
 
 @pytest.mark.skipif(windows, reason="Windows hates fun")
@@ -43,7 +43,7 @@ def test_really_funny_project_names(temp_projects):
     for name in NAMES:
         try:
             temp_projects.create(name, backend="tests")
-            assert os.path.isdir(projects.dir)
+            assert os.path.isdir(temp_projects.dir)
             print("This is OK:", name)
         except:
             print("This is not OK:", name)
@@ -69,8 +69,9 @@ def test_funny_project_names(temp_projects):
     ]
     for name in NAMES:
         temp_projects.create(name, backend="tests")
-        assert os.path.isdir(projects.dir)
+        print(temp_projects.dir)
+        assert os.path.isdir(temp_projects.dir)
 
-def test_create_project(temp_projects):
+def test_project_report(temp_projects):
     temp_projects.create("foo", backend="tests")
-    assert projects.report
+    assert temp_projects.report()

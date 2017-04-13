@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from . import backend_mapping
-from .filesystem import create_project_dir, get_dir_size
+from .filesystem import create_project_dir, get_dir_size, BASE_DIR
 from .peewee import JSONField, RetryDatabase
 from peewee import Model, TextField, BlobField
-import appdirs
 import collections
 import os
 import shutil
@@ -37,10 +36,11 @@ class Project(Model):
 
 
 class ProjectManager(collections.abc.Iterable):
-    def __init__(self, base_dir):
+    dir = None
+
+    def __init__(self, base_dir=BASE_DIR):
         self.base_dir = base_dir
-        self.current = None
-        self.dir = None
+        self.current, self.backend = None, None
 
         project_database.init(os.path.join(base_dir, "projects.db"))
         project_database.create_tables([Project], safe=True)
@@ -70,6 +70,10 @@ class ProjectManager(collections.abc.Iterable):
                 "".join(["\n\t{}".format(x) for x in sorted([x.name for x in self])])
             )
 
+    @property
+    def dir(self):
+        return self.current.directory if self.current else None
+
     def get(self, name):
         if name not in self:
             raise ValueError("{} is not a project".format(name))
@@ -78,10 +82,10 @@ class ProjectManager(collections.abc.Iterable):
     def select(self, name):
         new = self.get(name)
 
-        if self.current is not None:
-            self.current.deactivate()
+        if self.backend is not None:
+            self.backend.deactivate()
 
-        self.current = None
+        self.current, self.backend = None, None
 
         try:
             self.backend = backend_mapping[new.backend]
@@ -100,7 +104,7 @@ class ProjectManager(collections.abc.Iterable):
             return MissingBackend("No `default` backend available; "
                                   "Must specify a project backend.")
 
-        dirpath = create_project_dir(name)
+        dirpath = create_project_dir(name, self.base_dir)
         Project.create(
             name=name,
             directory=dirpath,

@@ -47,29 +47,29 @@ def check_dir(directory):
     return os.path.isdir(directory) and os.access(directory, os.W_OK)
 
 
-def create_base_project_dir():
+def create_base_project_dir(base_dir=BASE_DIR):
     """Create directory for storing data on projects.
 
     Most projects will be subdirectories.
 
     Returns a directory path."""
-    if os.path.isdir(BASE_DIR):
-        if os.access(BASE_DIR, os.W_OK):
-            return BASE_DIR
+    if os.path.isdir(base_dir):
+        if os.access(base_dir, os.W_OK):
+            return base_dir
         else:
             WARNING = ("Brightway directory exists, but is read-only. "
                         "Please fix this and restart.")
             warnings.warn(WARNING)
     else:
-        os.makedirs(BASE_DIR)
-        return BASE_DIR
+        os.makedirs(base_dir)
+        return base_dir
 
 
-def create_project_dir(name):
+def create_project_dir(name, base_dir=BASE_DIR):
     """Create subdirectory for project ``name``.
 
     Returns a directory path."""
-    dirpath = os.path.join(BASE_DIR, safe_filename(name))
+    dirpath = os.path.join(base_dir, safe_filename(name))
     create_dir(dirpath)
     return dirpath
 
