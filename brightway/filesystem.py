@@ -54,7 +54,7 @@ def create_base_dir():
         warnings.warn(WARNING)
 
 
-def create_project_dir(name):
+def create_project_dir(name, base_dir=BASE_DIR):
     """Create subdirectory for project ``name``.
 
     Returns a directory path."""
