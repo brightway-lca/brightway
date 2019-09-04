@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from peewee import SqliteDatabase, Model, TextField
-from playhouse.shortcuts import RetryOperationalError
 import os
 import json
 
@@ -15,5 +14,29 @@ class JSONField(TextField):
         return json.loads(value)
 
 
-class RetryDatabase(RetryOperationalError, SqliteDatabase):
-    pass
+class SubstitutableDatabase(object):
+    def __init__(self, filepath, tables=[]):
+        self._tables = tables
+        if filepath is not None:
+            self._create_database(filepath)
+
+    def _create_database(self, filepath):
+        self._db = SqliteDatabase(filepath)
+        for model in self._tables:
+            model.bind(self._db, bind_refs=False, bind_backrefs=False)
+        self._db.connect()
+        self._db.create_tables(self._tables)
+
+    def _change_path(self, filepath):
+        self.close()
+        self._create_database(filepath)
+
+    def _add_table(self, model):
+        self._tables.append(model)
+
+    def _vacuum(self):
+        print("Vacuuming database ")
+        self.execute_sql('VACUUM;')
+
+    def __getattr__(self, attr):
+        return self._db.attr

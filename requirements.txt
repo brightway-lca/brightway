@@ -1,3 +1,2 @@
 appdirs
 peewee
-stevedore

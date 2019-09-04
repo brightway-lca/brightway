@@ -6,7 +6,6 @@ here = path.abspath(path.dirname(__file__))
 requirements = [
     'appdirs',
     'peewee',
-    'stevedore',
 ]
 
 test_requirements = ['pytest', 'bw-default-backend']
@@ -15,11 +14,11 @@ setup(
     name='brightway',
     version='3.0.dev',
     description='Python framework for Life Cycle Assessment',
-    long_description=open(os.path.join(here, "README.md")).read(),
+    long_description=open(path.join(here, "README.md")).read(),
     url='https://github.com/pypa/sampleproject',
     author='Chris Mutel',
     author_email='cmutel@gmail.com',
-    license=open(os.path.join(here, "LICENSE.txt")).read(),
+    license="NewBSD 3-clause; LICENSE",
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',

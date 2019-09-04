@@ -1,6 +1,5 @@
 appdirs
 peewee
-stevedore
 stats_arrays
 numpy
 pytest

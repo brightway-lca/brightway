@@ -10,7 +10,7 @@ install:
     - cmd: call %CONDA_INSTALL_LOCN%\Scripts\activate.bat
     - cmd: conda update -y -q conda
     - cmd: conda config --add channels conda-forge
-    - cmd: conda install -y -q appdirs numpy scipy peewee pytest stevedore
+    - cmd: conda install -y -q appdirs numpy scipy peewee pytest
     - cmd: pip install --no-cache-dir -r ci/test-requirements.txt
 
 build: false

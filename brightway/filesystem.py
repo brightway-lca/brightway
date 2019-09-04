@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from . import BASE_DIR, BASE_LOGS_DIR
+from pathlib import Path
 import hashlib
 import os
 import re
@@ -7,9 +9,6 @@ import unicodedata
 import warnings
 
 re_slugify = re.compile('[^\w\s-]', re.UNICODE)
-
-BASE_DIR = appdirs.user_data_dir("brightway", "bw")
-BASE_LOG_DIR = appdirs.user_log_dir("brightway", "bw")
 
 
 def safe_filename(string, add_hash=True):
@@ -38,38 +37,28 @@ def safe_filename(string, add_hash=True):
 
 def create_dir(dirpath):
     """Create directory tree to ``dirpath``; ignore if already exists."""
-    if not os.path.isdir(dirpath):
-        os.makedirs(dirpath)
+    dirpath.mkdir(parents=True, exist_ok=True)
 
 
-def check_dir(directory):
-    """Returns ``True`` if given path is a directory and writeable, ``False`` otherwise."""
-    return os.path.isdir(directory) and os.access(directory, os.W_OK)
-
-
-def create_base_project_dir():
+def create_base_dir():
     """Create directory for storing data on projects.
 
     Most projects will be subdirectories.
 
     Returns a directory path."""
-    if os.path.isdir(BASE_DIR):
-        if os.access(BASE_DIR, os.W_OK):
-            return BASE_DIR
-        else:
-            WARNING = ("Brightway directory exists, but is read-only. "
-                        "Please fix this and restart.")
-            warnings.warn(WARNING)
-    else:
-        os.makedirs(BASE_DIR)
-        return BASE_DIR
+    create_dir(BASE_DIR)
+    create_dir(BASE_LOGS_DIR)
+    if not os.access(BASE_DIR, os.W_OK):
+        WARNING = ("Brightway directory exists, but is read-only. "
+                    "Please fix this and restart.")
+        warnings.warn(WARNING)
 
 
 def create_project_dir(name):
     """Create subdirectory for project ``name``.
 
     Returns a directory path."""
-    dirpath = os.path.join(BASE_DIR, safe_filename(name))
+    dirpath = BASE_DIR / safe_filename(name)
     create_dir(dirpath)
     return dirpath
 

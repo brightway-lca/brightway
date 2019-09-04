@@ -1,24 +1,21 @@
 # -*- coding: utf-8 -*-
-from . import backend_mapping
+from . import BASE_DIR
 from .filesystem import create_project_dir, get_dir_size
-from .peewee import JSONField, RetryDatabase
-from peewee import Model, TextField, BlobField
+from .peewee import JSONField, SubstitutableDatabase
+from peewee import Model, TextField, BlobField, BooleanField, DoesNotExist
 import appdirs
 import collections
 import os
 import shutil
 
 
-project_database = RetryDatabase(None)
-
-MISSING_BACKEND = "The backend {} for project {} is not installed."
-
-
 class Project(Model):
     data = JSONField()
-    backend = TextField()
+    backends = JSONField()
     directory = TextField()
     name = TextField(index=True, unique=True)
+    default = BooleanField(default=False)
+    active = BooleanField(default=True)
 
     def __str__(self):
         return "Project: {}".format(self.name)
@@ -32,18 +29,16 @@ class Project(Model):
         else:
             return self.name.lower() < other.name.lower()
 
-    class Meta:
-        database = project_database
+
+project_database = SubstitutableDatabase(BASE_DIR / "projects.db", [Project])
 
 
 class ProjectManager(collections.abc.Iterable):
-    def __init__(self, base_dir):
-        self.base_dir = base_dir
-        self.current = None
-        self.backend = None
-
-        project_database.init(os.path.join(base_dir, "projects.db"))
-        project_database.create_tables([Project], safe=True)
+    def __init__(self):
+        try:
+            self.current = Project.get(Project.default == True)
+        except DoesNotExist:
+            self.current = None
 
     def __iter__(self):
         for project_ds in Project.select():
@@ -74,28 +69,12 @@ class ProjectManager(collections.abc.Iterable):
     def dir(self):
         return self.current.directory if self.current else None
 
-    def get(self, name):
-        if name not in self:
-            raise ValueError("{} is not a project".format(name))
-        return Project.get(Project.name == name)
-
     def select(self, name):
-        new = self.get(name)
+        if self.current:
+            self.deactivate()
+        self.activate(name)
 
-        if self.backend is not None:
-            self.backend.deactivate()
-
-        self.current = None
-
-        try:
-            self.backend = backend_mapping[new.backend]
-            self.backend.activate(new.directory)
-        except KeyError:
-            raise MissingBackend(MISSING_BACKEND.format(new.backend, name))
-
-        self.current = new
-
-    def create(self, name, backend=None, switch=True, **kwargs):
+    def create(self, name, backends=None, switch=True, default=False, **kwargs):
         if name in self:
             print("This project already exists; use "
                   "`projects.select({})` to switch.".format(name))
@@ -105,17 +84,20 @@ class ProjectManager(collections.abc.Iterable):
                                   "Must specify a project backend.")
 
         dirpath = create_project_dir(name)
+        if default:
+            Project.update(default=False).execute()
         Project.create(
             name=name,
             directory=dirpath,
             data=kwargs,
-            backend=backend
+            backend=backend,
+            default=default,
         )
 
         if switch:
             self.select(name)
 
-    # def copy_project(self, new_name, switch=True):
+    # def copy_project(self, new_name, switch=True, default=False):
     #     """Copy current project to a new project named ``new_name``. If ``switch``, switch to new project."""
     #     if new_name in self:
     #         raise ValueError("Project {} already exists".format(new_name))
@@ -131,16 +113,6 @@ class ProjectManager(collections.abc.Iterable):
     #     ))
     #     if switch:
     #         self.set_current(new_name)
-
-    # def request_directory(self, name):
-    #     """Return the absolute path to the subdirectory ``dirname``, creating it if necessary.
-
-    #     Returns ``False`` if directory can't be created."""
-    #     fp = os.path.join(self.dir, str(name))
-    #     create_dir(fp)
-    #     if not os.path.isdir(fp):
-    #         return False
-    #     return fp
 
     def delete_project(self, name, delete_data=False):
         """Delete project ``name``.
@@ -177,3 +149,18 @@ class ProjectManager(collections.abc.Iterable):
         return sorted([
             (x.name, x.backend, get_dir_size(x.directory)) for x in self
         ])
+
+    def use_temp_directory(self):
+        """Point the ProjectManager towards a temporary directory instead of `user_data_dir`.
+
+        Used exclusively for tests."""
+        if not self._is_temp_dir:
+            self._orig_base_data_dir = self._base_data_dir
+            self._orig_base_logs_dir = self._base_logs_dir
+        temp_dir = tempfile.mkdtemp()
+        self._base_data_dir = os.path.join(temp_dir, "data")
+        self._base_logs_dir = os.path.join(temp_dir, "logs")
+        self.db.change_path(':memory:')
+        self.select("tests-default")
+        self._is_temp_dir = True
+        return temp_dir
