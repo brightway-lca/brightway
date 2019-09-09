@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
-# from . import temp_projects
-# from brightway import backend_mapping
-# from brightway.projects import Project
-# import os
 import platform
-# import pytest
+import pytest
+from brightway import projects, Project
+from brightway.testing import bwtest
+
 
 windows = platform.system() == "Windows"
 
 
-# def test_setup(temp_projects):
-#     assert not temp_projects.current
-#     temp_projects.create("foo", backend="tests")
-#     assert 'tests' in backend_mapping
-#     p = Project.get(name='foo')
-#     assert not p.data
-#     assert p.backend == 'tests'
-#     assert "projects.db" in os.listdir(temp_projects.base_dir)
+def test_setup(bwtest):
+    assert not projects.current
+    projects.create("foo")
+    print(Project.select().count())
+    p = Project.get(name='foo')
+    assert not p.data
+    assert "projects.db" in os.listdir(bwtest.base_dir)
 
 # def test_select_project(temp_projects):
 #     temp_projects.create("foo", backend="tests", switch=False)

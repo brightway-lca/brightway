@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+from . import backend_mapping
+from .errors import MissingBackend
 from .filesystem import safe_filename, get_dir_size, create_dir
 from .peewee import JSONField
 from peewee import Model, TextField, BlobField, BooleanField, DoesNotExist
@@ -93,9 +94,15 @@ class ProjectManager(collections.abc.Iterable):
             print("This project already exists; use "
                   "`projects.select({})` to switch.".format(name))
 
-        if backend is None and 'default' not in backend_mapping:
+        if backends is None and 'default' not in backend_mapping:
             return MissingBackend("No `default` backend available; "
                                   "Must specify a project backend.")
+        else:
+            for label in (backends or ['default']):
+                backend = backend_mapping[label]
+                if getattr(backend, "__brightway_common_api__"):
+                    backend.create(name)
+
 
         dirpath = self.base_dir / safe_filename(name)
         dirpath.mkdir()
@@ -106,7 +113,7 @@ class ProjectManager(collections.abc.Iterable):
             name=name,
             directory=dirpath,
             data=kwargs,
-            backend=backend,
+            backend=backends,
             default=default,
         )
 
