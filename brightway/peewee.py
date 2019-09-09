@@ -2,6 +2,10 @@
 from peewee import SqliteDatabase, Model, TextField
 import os
 import json
+from pathlib import Path
+
+
+abspath = lambda x: str(x.absolute()) if isinstance(x, Path) else x
 
 
 class JSONField(TextField):
@@ -21,7 +25,7 @@ class SubstitutableDatabase(object):
             self._create_database(filepath)
 
     def _create_database(self, filepath):
-        self._db = SqliteDatabase(filepath)
+        self._db = SqliteDatabase(abspath(filepath))
         for model in self._tables:
             model.bind(self._db, bind_refs=False, bind_backrefs=False)
         self._db.connect()

@@ -1,5 +1,5 @@
 appdirs
-peewee
+peewee>=3.10
 stats_arrays
 numpy
 pytest
