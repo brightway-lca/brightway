@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
-from . import config
-from brightway import projects
-import wrapt
+from . import projects, project_database
+from pathlib import Path
+import pytest
 
 
-@wrapt.decorator
-def bwtest(wrapped, instance, args, kwargs):
-    config['test'] = True
-    projects.use_temp_directory()
-    return wrapped(*args, **kwargs)
+@pytest.fixture
+def bwtest(monkeypatch, tmp_path):
+    project_database._change_path(tmp_path / "projects.test.db")
+    bd = lambda : tmp_path
+    ld = lambda : tmp_path / "__logs__"
+    ld().mkdir()
+    monkeypatch.setattr(projects, "base_dir", bd)
+    monkeypatch.setattr(projects, "base_log_dir", ld)
+    return tmp_path

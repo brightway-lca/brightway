@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-from . import BASE_DIR
-from .filesystem import create_project_dir, get_dir_size
-from .peewee import JSONField, SubstitutableDatabase
+
+from .filesystem import safe_filename, get_dir_size, create_dir
+from .peewee import JSONField
 from peewee import Model, TextField, BlobField, BooleanField, DoesNotExist
 import appdirs
 import collections
 import os
 import shutil
+import warnings
 
 
 class Project(Model):
@@ -30,15 +31,28 @@ class Project(Model):
             return self.name.lower() < other.name.lower()
 
 
-project_database = SubstitutableDatabase(BASE_DIR / "projects.db", [Project])
-
-
 class ProjectManager(collections.abc.Iterable):
-    def __init__(self):
+    def __init__(self, base_dir, base_log_dir):
+        self.base_dir = base_dir
+        self.base_log_dir = base_log_dir
+        self.create_base_dirs()
         try:
             self.current = Project.get(Project.default == True)
         except DoesNotExist:
             self.current = None
+
+    def create_base_dirs(self):
+        """Create directory for storing data on projects.
+
+        Most projects will be subdirectories.
+
+        Returns a directory path."""
+        create_dir(self.base_dir)
+        create_dir(self.base_log_dir)
+        if not os.access(self.base_dir, os.W_OK):
+            WARNING = ("Brightway directory exists, but is read-only. "
+                        "Please fix this and restart.")
+            warnings.warn(WARNING)
 
     def __iter__(self):
         for project_ds in Project.select():
@@ -83,8 +97,10 @@ class ProjectManager(collections.abc.Iterable):
             return MissingBackend("No `default` backend available; "
                                   "Must specify a project backend.")
 
-        dirpath = create_project_dir(name)
+        dirpath = self.base_dir / safe_filename(name)
+        dirpath.mkdir()
         if default:
+            # Set all other projects to non-default
             Project.update(default=False).execute()
         Project.create(
             name=name,
@@ -98,6 +114,7 @@ class ProjectManager(collections.abc.Iterable):
             self.select(name)
 
     # def copy_project(self, new_name, switch=True, default=False):
+    # Should be defined by backend
     #     """Copy current project to a new project named ``new_name``. If ``switch``, switch to new project."""
     #     if new_name in self:
     #         raise ValueError("Project {} already exists".format(new_name))
@@ -150,17 +167,17 @@ class ProjectManager(collections.abc.Iterable):
             (x.name, x.backend, get_dir_size(x.directory)) for x in self
         ])
 
-    def use_temp_directory(self):
-        """Point the ProjectManager towards a temporary directory instead of `user_data_dir`.
+    # def use_temp_directory(self):
+    #     """Point the ProjectManager towards a temporary directory instead of `user_data_dir`.
 
-        Used exclusively for tests."""
-        if not self._is_temp_dir:
-            self._orig_base_data_dir = self._base_data_dir
-            self._orig_base_logs_dir = self._base_logs_dir
-        temp_dir = tempfile.mkdtemp()
-        self._base_data_dir = os.path.join(temp_dir, "data")
-        self._base_logs_dir = os.path.join(temp_dir, "logs")
-        self.db.change_path(':memory:')
-        self.select("tests-default")
-        self._is_temp_dir = True
-        return temp_dir
+    #     Used exclusively for tests."""
+    #     if not self._is_temp_dir:
+    #         self._orig_base_data_dir = self._base_data_dir
+    #         self._orig_base_logs_dir = self._base_logs_dir
+    #     temp_dir = tempfile.mkdtemp()
+    #     self._base_data_dir = os.path.join(temp_dir, "data")
+    #     self._base_logs_dir = os.path.join(temp_dir, "logs")
+    #     self.db.change_path(':memory:')
+    #     self.select("tests-default")
+    #     self._is_temp_dir = True
+    #     return temp_dir

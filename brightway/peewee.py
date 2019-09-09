@@ -39,4 +39,4 @@ class SubstitutableDatabase(object):
         self.execute_sql('VACUUM;')
 
     def __getattr__(self, attr):
-        return self._db.attr
+        return getattr(self._db, attr)

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from . import BASE_DIR, BASE_LOGS_DIR
 from pathlib import Path
 import hashlib
 import os
@@ -38,29 +37,6 @@ def safe_filename(string, add_hash=True):
 def create_dir(dirpath):
     """Create directory tree to ``dirpath``; ignore if already exists."""
     dirpath.mkdir(parents=True, exist_ok=True)
-
-
-def create_base_dir():
-    """Create directory for storing data on projects.
-
-    Most projects will be subdirectories.
-
-    Returns a directory path."""
-    create_dir(BASE_DIR)
-    create_dir(BASE_LOGS_DIR)
-    if not os.access(BASE_DIR, os.W_OK):
-        WARNING = ("Brightway directory exists, but is read-only. "
-                    "Please fix this and restart.")
-        warnings.warn(WARNING)
-
-
-def create_project_dir(name, base_dir=BASE_DIR):
-    """Create subdirectory for project ``name``.
-
-    Returns a directory path."""
-    dirpath = BASE_DIR / safe_filename(name)
-    create_dir(dirpath)
-    return dirpath
 
 
 def get_dir_size(dirpath):
