@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import platform
-import pytest
 from brightway import projects, Project
 from brightway.testing import bwtest
+import os
+import platform
+import pytest
 
 
 windows = platform.system() == "Windows"
@@ -10,11 +11,11 @@ windows = platform.system() == "Windows"
 
 def test_setup(bwtest):
     assert not projects.current
-    projects.create("foo")
-    print(Project.select().count())
+    projects.create(name="foo", backends=['tests'])
     p = Project.get(name='foo')
     assert not p.data
-    assert "projects.db" in os.listdir(bwtest.base_dir)
+    assert "projects.test.db" in os.listdir(bwtest)
+    assert "__logs__" in os.listdir(bwtest)
 
 # def test_select_project(temp_projects):
 #     temp_projects.create("foo", backend="tests", switch=False)

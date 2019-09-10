@@ -32,10 +32,9 @@ class FakeBackend:
 @pytest.fixture
 def bwtest(monkeypatch, tmp_path):
     project_database._change_path(tmp_path / "projects.test.db")
-    bd = lambda : tmp_path
-    ld = lambda : tmp_path / "__logs__"
-    ld().mkdir()
-    monkeypatch.setattr(projects, "base_dir", bd)
+    ld = tmp_path / "__logs__"
+    ld.mkdir()
+    monkeypatch.setattr(projects, "base_dir", tmp_path)
     monkeypatch.setattr(projects, "base_log_dir", ld)
     monkeypatch.setitem(backend_mapping, "tests", FakeBackend())
     return tmp_path

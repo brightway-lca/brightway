@@ -12,8 +12,8 @@ import warnings
 
 
 class Project(Model):
-    data = JSONField()
-    backends = JSONField()
+    data = JSONField(default={})
+    backends = JSONField(default=[])
     directory = TextField()
     name = TextField(index=True, unique=True)
     default = BooleanField(default=False)
@@ -87,36 +87,45 @@ class ProjectManager(collections.abc.Iterable):
     def select(self, name):
         if self.current:
             self.deactivate()
+        self.current = Project.get(name=name)
         self.activate(name)
 
-    def create(self, name, backends=None, switch=True, default=False, **kwargs):
+    def activate(self, name):
+        for label in self.current.backends:
+            backend_mapping[label].activate_project(name)
+
+    def deactivate(self):
+        for label in self.current.backends:
+            backend_mapping[label].deactivate_project(self.current.name)
+
+    def create(self, name, backends=('default',), switch=True, default=False, **kwargs):
         if name in self:
             print("This project already exists; use "
                   "`projects.select({})` to switch.".format(name))
 
         if backends is None and 'default' not in backend_mapping:
-            return MissingBackend("No `default` backend available; "
+            raise MissingBackend("No `default` backend available; "
                                   "Must specify a project backend.")
-        else:
-            for label in (backends or ['default']):
+        elif backends:
+            for label in backends:
                 backend = backend_mapping[label]
                 if getattr(backend, "__brightway_common_api__"):
-                    backend.create(name)
-
+                    backend.create_project(name)
+        else:
+            backends = []
 
         dirpath = self.base_dir / safe_filename(name)
         dirpath.mkdir()
         if default:
             # Set all other projects to non-default
             Project.update(default=False).execute()
-        Project.create(
+        obj = Project.create(
             name=name,
             directory=dirpath,
             data=kwargs,
-            backend=backends,
+            backends=backends,
             default=default,
         )
-
         if switch:
             self.select(name)
 
