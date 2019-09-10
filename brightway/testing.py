@@ -9,25 +9,25 @@ class FakeBackend:
     activated = deactivated = created = copied = None
     deleted = exported = imported = None
 
-    def activate_project(self, name):
+    def activate_project(self, obj):
         self.activated = name
 
-    def deactivate_project(self, name):
+    def deactivate_project(self, obj):
         self.deactivated = name
 
-    def create_project(self, name):
+    def create_project(self, obj):
         self.created = name
 
-    def copy_project(self, name):
+    def copy_project(self, old, new_name):
         self.copied = name
 
-    def delete_project(self, name):
+    def delete_project(self, obj):
         self.deleted = name
 
-    def export_project(self, name):
+    def export_project(self, obj, filepath):
         self.exported = name
 
-    def import_project(self, name):
+    def import_project(self, obj, filepath):
         self.imported = name
 
 

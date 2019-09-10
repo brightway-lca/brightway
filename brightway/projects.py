@@ -31,6 +31,9 @@ class Project(Model):
         else:
             return self.name.lower() < other.name.lower()
 
+    def backends_resolved(self):
+        for label in self.backends:
+            yield backend_mapping[label]
 
 class ProjectManager(collections.abc.Iterable):
     def __init__(self, base_dir, base_log_dir):
@@ -90,13 +93,16 @@ class ProjectManager(collections.abc.Iterable):
         self.current = Project.get(name=name)
         self.activate(name)
 
-    def activate(self, name):
-        for label in self.current.backends:
-            backend_mapping[label].activate_project(name)
+    def activate(self):
+        """Activate the current project with its backends"""
+        for backend in self.current.backends_resolved():
+            backend.activate_project(self.current)
 
     def deactivate(self):
-        for label in self.current.backends:
-            backend_mapping[label].deactivate_project(self.current.name)
+        """Deactivate the current project with its backends"""
+        for backend in self.current.backends_resolved():
+            backend.deactivate_project(self.current)
+        self.current = None
 
     def create(self, name, backends=('default',), switch=True, default=False, **kwargs):
         if name in self:
@@ -110,7 +116,7 @@ class ProjectManager(collections.abc.Iterable):
             for label in backends:
                 backend = backend_mapping[label]
                 if getattr(backend, "__brightway_common_api__"):
-                    backend.create_project(name)
+                    backend.create_project(name, self.dir / safe_filename(name))
         else:
             backends = []
 
@@ -155,6 +161,10 @@ class ProjectManager(collections.abc.Iterable):
             raise ValueError("Can't delete current project")
         if name not in self:
             raise ValueError("{} is not a project".format(name))
+
+        obj = Project.get(Project.name == name)
+        for backend in obj.backends_resolved():
+            backend.delete_project(obj)
 
         Project.delete().where(Project.name == name).execute()
         if delete_dir:
