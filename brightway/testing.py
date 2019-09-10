@@ -6,27 +6,29 @@ import pytest
 
 class FakeBackend:
     __brightway_common_api__ = True
+    activated = deactivated = created = copied = None
+    deleted = exported = imported = None
 
     def activate_project(self, name):
-        pass
+        self.activated = name
 
-    def deactivate_project(self):
-        pass
+    def deactivate_project(self, name):
+        self.deactivated = name
 
     def create_project(self, name):
-        pass
+        self.created = name
 
     def copy_project(self, name):
-        pass
+        self.copied = name
 
     def delete_project(self, name):
-        pass
+        self.deleted = name
 
     def export_project(self, name):
-        pass
+        self.exported = name
 
     def import_project(self, name):
-        pass
+        self.imported = name
 
 
 @pytest.fixture

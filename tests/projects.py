@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from brightway import projects, Project
+from brightway import projects, Project, backend_mapping
 from brightway.testing import bwtest
 import os
 import platform
@@ -17,64 +17,65 @@ def test_setup(bwtest):
     assert "projects.test.db" in os.listdir(bwtest)
     assert "__logs__" in os.listdir(bwtest)
 
-# def test_select_project(temp_projects):
-#     temp_projects.create("foo", backend="tests", switch=False)
-#     temp_projects.select("foo")
-#     assert temp_projects.current.name == 'foo'
+def test_select_project(bwtest):
+    backend = backend_mapping['tests']
+    projects.create("foo", backends=["tests"], switch=False)
+    assert backend.created == 'foo'
+    assert not backend.activated
+    projects.select("foo")
+    assert backend.activated == 'foo'
+    assert projects.current.name == 'foo'
 
-# def test_create_switch_project(temp_projects):
-#     temp_projects.create("foo", backend="tests")
-#     assert temp_projects.current.name == 'foo'
+def test_create_and_switch_project(bwtest):
+    backend = backend_mapping['tests']
+    assert not backend.activated
+    projects.create("foo", backends=["tests"])
+    assert backend.activated == 'foo'
+    assert backend.created == 'foo'
+    assert projects.current.name == 'foo'
 
-# def test_fail(temp_projects):
-#     print(temp_projects.base_dir)
-#     raise ValueError
+def test_create_project_creates_dir(bwtest):
+    projects.create("foo", backends=["tests"])
+    assert os.path.isdir(projects.dir)
 
-# def test_create_project(temp_projects):
-#     temp_projects.create("foo", backend="tests")
-#     print(temp_projects.current)
-#     print(temp_projects.dir)
-#     assert os.path.isdir(temp_projects.dir)
+@pytest.mark.skipif(windows, reason="Windows hates fun")
+def test_really_funny_project_names(bwtest):
+    NAMES = [
+        "Roses are [0;31mred[0m, violets are [0;34mblue. Hope you enjoy terminal hue",
+        "👾 🙇 💁 🙅 🙆 🙋 🙎 🙍 ",
+    ]
+    error_found = False
+    for name in NAMES:
+        try:
+            projects.create(name, backends=["tests"])
+            assert os.path.isdir(projects.dir)
+            print("This is OK:", name)
+        except:
+            print("This is not OK:", name)
+            error_found = True
+    if error_found:
+        raise ValueError("Invaid project name")
 
-# @pytest.mark.skipif(windows, reason="Windows hates fun")
-# def test_really_funny_project_names(temp_projects):
-#     NAMES = [
-#         "Roses are [0;31mred[0m, violets are [0;34mblue. Hope you enjoy terminal hue",
-#         "👾 🙇 💁 🙅 🙆 🙋 🙎 🙍 ",
-#     ]
-#     error_found = False
-#     for name in NAMES:
-#         try:
-#             temp_projects.create(name, backend="tests")
-#             assert os.path.isdir(temp_projects.dir)
-#             print("This is OK:", name)
-#         except:
-#             print("This is not OK:", name)
-#             error_found = True
-#     if error_found:
-#         raise ValueError("Invaid project name")
+def test_funny_project_names(bwtest):
+    NAMES = [
+        "Powerلُلُصّبُلُلصّبُررً ॣ ॣh ॣ ॣ冗",
+        "True",
+        "None",
+        "1.0/0.0",
+        "0xabad1dea",
+        "!@#$%^&*()`~",
+        "<>?:'{}|_+",
+        ",./;'[]\-=",
+        "Ω≈ç√∫˜µ≤≥÷",
+        "田中さんにあげて下さい",
+        "｀ｨ(´∀｀∩",
+        "הָיְתָהtestالصفحات التّحول",
+        "　",
+    ]
+    for name in NAMES:
+        projects.create(name, backends=["tests"])
+        assert os.path.isdir(projects.dir)
 
-# def test_funny_project_names(temp_projects):
-#     NAMES = [
-#         "Powerلُلُصّبُلُلصّبُررً ॣ ॣh ॣ ॣ冗",
-#         "True",
-#         "None",
-#         "1.0/0.0",
-#         "0xabad1dea",
-#         "!@#$%^&*()`~",
-#         "<>?:'{}|_+",
-#         ",./;'[]\-=",
-#         "Ω≈ç√∫˜µ≤≥÷",
-#         "田中さんにあげて下さい",
-#         "｀ｨ(´∀｀∩",
-#         "הָיְתָהtestالصفحات التّحول",
-#         "　",
-#     ]
-#     for name in NAMES:
-#         temp_projects.create(name, backend="tests")
-#         print(temp_projects.dir)
-#         assert os.path.isdir(temp_projects.dir)
-
-# def test_project_report(temp_projects):
-#     temp_projects.create("foo", backend="tests")
-#     assert temp_projects.report()
+def test_project_report(bwtest):
+    projects.create("foo", backends=["tests"])
+    assert projects.report()

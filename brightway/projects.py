@@ -180,7 +180,7 @@ class ProjectManager(collections.abc.Iterable):
 
         Returns tuples of ``(project name, backend name, and directory size (GB))``."""
         return sorted([
-            (x.name, x.backend, get_dir_size(x.directory)) for x in self
+            (x.name, x.backends, get_dir_size(x.directory)) for x in self
         ])
 
     # def use_temp_directory(self):
