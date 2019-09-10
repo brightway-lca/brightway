@@ -17,7 +17,7 @@ class Project(Model):
     directory = TextField()
     name = TextField(index=True, unique=True)
     default = BooleanField(default=False)
-    active = BooleanField(default=True)
+    enabled = BooleanField(default=True)
 
     def __str__(self):
         return "Project: {}".format(self.name)
@@ -34,6 +34,7 @@ class Project(Model):
     def backends_resolved(self):
         for label in (self.backends or []):
             yield backend_mapping[label]
+
 
 class ProjectManager(collections.abc.Iterable):
     def __init__(self, base_dir, base_log_dir):
@@ -59,14 +60,14 @@ class ProjectManager(collections.abc.Iterable):
             warnings.warn(WARNING)
 
     def __iter__(self):
-        for project_ds in Project.select():
+        for project_ds in Project.select().where(Project.enabled == True):
             yield project_ds
 
     def __contains__(self, name):
         return Project.select().where(Project.name == name).count() > 0
 
     def __len__(self):
-        return Project.select().count()
+        return Project.select().where(Project.enabled == True).count()
 
     def __repr__(self):
         if len(self) > 20:
@@ -151,22 +152,23 @@ class ProjectManager(collections.abc.Iterable):
     #     if switch:
     #         self.set_current(new_name)
 
-    def delete_project(self, name, delete_data=False):
+    def delete_project(self, name):
         """Delete project ``name``.
 
-        By default, the underlying project directory is not deleted; only the project name is removed from the list of active projects. If ``delete_dir`` is ``True``, then also delete the project directory."""
+        Set the ``.enabled`` to ``False`` to exclude this project instead of deleting it."""
         if name == self.current:
-            raise ValueError("Can't delete current project")
-        if name not in self:
+            self.deactivate()
+
+        try:
+            obj = Project.get(Project.name == name)
+        except DoesNotExist:
             raise ValueError("{} is not a project".format(name))
 
-        obj = Project.get(Project.name == name)
         for backend in obj.backends_resolved():
             backend.delete_project(obj)
 
-        Project.delete().where(Project.name == name).execute()
-        if delete_dir:
-            shutil.rmtree(directory)
+        obj.delete_instance()
+        shutil.rmtree(directory)
 
     # def purge_deleted_directories(self):
     #     """Delete project directories for projects which are no longer registered.
