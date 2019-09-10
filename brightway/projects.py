@@ -2,7 +2,7 @@
 from . import backend_mapping
 from .errors import MissingBackend
 from .filesystem import safe_filename, get_dir_size, create_dir
-from .peewee import JSONField
+from .peewee import JSONField, PathField
 from peewee import Model, TextField, BlobField, BooleanField, DoesNotExist
 import appdirs
 import collections
@@ -14,7 +14,7 @@ import warnings
 class Project(Model):
     data = JSONField(default={})
     backends = JSONField(default=[])
-    directory = TextField()
+    directory = PathField()
     name = TextField(index=True, unique=True)
     default = BooleanField(default=False)
     enabled = BooleanField(default=True)

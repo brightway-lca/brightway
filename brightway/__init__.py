@@ -9,7 +9,7 @@ __version__ = (3, 0, "dev")
 
 backend_mapping = {}
 try:
-    from bw_default_backend import DefaultBackend
+    from bw_default_backend import Config as DefaultBackend
     backend_mapping['default'] = DefaultBackend()
 except ImportError:
     pass

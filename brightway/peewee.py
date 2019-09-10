@@ -1,21 +1,49 @@
 # -*- coding: utf-8 -*-
-from peewee import SqliteDatabase, Model, TextField
-import os
-import json
 from pathlib import Path
-
+from peewee import SqliteDatabase, Model, TextField, BlobField
+import json
+import os
+import pickle
 
 abspath = lambda x: str(x.absolute()) if isinstance(x, Path) else x
 
 
 class JSONField(TextField):
     def db_value(self, value):
-        return super(JSONField, self).db_value(
-            json.dumps(value)
-        )
+        return super().db_value(json.dumps(value))
 
     def python_value(self, value):
         return json.loads(value)
+
+
+class PathField(TextField):
+    def db_value(self, value):
+        return super().db_value(abspath(value))
+
+    def python_value(self, value):
+        return Path(value)
+
+
+class PickleField(BlobField):
+    def db_value(self, value):
+        return super().db_value(
+            pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
+        )
+
+    def python_value(self, value):
+        return pickle.loads(bytes(value))
+
+
+class TupleField(BlobField):
+    def db_value(self, value):
+        if not isinstance(value, tuple):
+            raise ValueError("{} is not a tuple".format(value))
+        return super().db_value(
+            pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
+        )
+
+    def python_value(self, value):
+        return pickle.loads(bytes(value))
 
 
 class SubstitutableDatabase(object):
