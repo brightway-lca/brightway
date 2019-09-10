@@ -20,18 +20,18 @@ def test_setup(bwtest):
 def test_select_project(bwtest):
     backend = backend_mapping['tests']
     projects.create("foo", backends=["tests"], switch=False)
-    assert backend.created == 'foo'
+    assert backend.created.name == 'foo'
     assert not backend.activated
     projects.select("foo")
-    assert backend.activated == 'foo'
+    assert backend.activated.name == 'foo'
     assert projects.current.name == 'foo'
 
 def test_create_and_switch_project(bwtest):
     backend = backend_mapping['tests']
     assert not backend.activated
     projects.create("foo", backends=["tests"])
-    assert backend.activated == 'foo'
-    assert backend.created == 'foo'
+    assert backend.activated.name == 'foo'
+    assert backend.created.name == 'foo'
     assert projects.current.name == 'foo'
 
 def test_create_project_creates_dir(bwtest):
@@ -65,7 +65,7 @@ def test_funny_project_names(bwtest):
         "0xabad1dea",
         "!@#$%^&*()`~",
         "<>?:'{}|_+",
-        ",./;'[]\-=",
+        r",./;'[]\-=",
         "Ω≈ç√∫˜µ≤≥÷",
         "田中さんにあげて下さい",
         "｀ｨ(´∀｀∩",

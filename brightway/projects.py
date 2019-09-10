@@ -32,7 +32,7 @@ class Project(Model):
             return self.name.lower() < other.name.lower()
 
     def backends_resolved(self):
-        for label in self.backends:
+        for label in (self.backends or []):
             yield backend_mapping[label]
 
 class ProjectManager(collections.abc.Iterable):
@@ -91,7 +91,7 @@ class ProjectManager(collections.abc.Iterable):
         if self.current:
             self.deactivate()
         self.current = Project.get(name=name)
-        self.activate(name)
+        self.activate()
 
     def activate(self):
         """Activate the current project with its backends"""
@@ -112,13 +112,6 @@ class ProjectManager(collections.abc.Iterable):
         if backends is None and 'default' not in backend_mapping:
             raise MissingBackend("No `default` backend available; "
                                   "Must specify a project backend.")
-        elif backends:
-            for label in backends:
-                backend = backend_mapping[label]
-                if getattr(backend, "__brightway_common_api__"):
-                    backend.create_project(name, self.dir / safe_filename(name))
-        else:
-            backends = []
 
         dirpath = self.base_dir / safe_filename(name)
         dirpath.mkdir()
@@ -132,6 +125,11 @@ class ProjectManager(collections.abc.Iterable):
             backends=backends,
             default=default,
         )
+
+        for backend in obj.backends_resolved():
+            if getattr(backend, "__brightway_common_api__"):
+                backend.create_project(obj)
+
         if switch:
             self.select(name)
 
