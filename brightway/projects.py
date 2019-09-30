@@ -157,7 +157,7 @@ class ProjectManager(collections.abc.Iterable):
 
         Set the ``.enabled`` to ``False`` to exclude this project instead of deleting it."""
         if name == self.current:
-            self.deactivate()
+            self.deactivate_project()
 
         try:
             obj = Project.get(Project.name == name)
@@ -168,7 +168,7 @@ class ProjectManager(collections.abc.Iterable):
             backend.delete_project(obj)
 
         obj.delete_instance()
-        shutil.rmtree(directory)
+        shutil.rmtree(obj.directory)
 
     # def purge_deleted_directories(self):
     #     """Delete project directories for projects which are no longer registered.

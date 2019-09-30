@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
+from collections.abc import Iterable
 from pathlib import Path
 from peewee import SqliteDatabase, Model, TextField, BlobField
 import json
 import os
-import pickle
 
 abspath = lambda x: str(x.absolute()) if isinstance(x, Path) else x
 
@@ -36,28 +36,27 @@ class PickleField(BlobField):
 
 class TupleField(BlobField):
     def db_value(self, value):
-        if not isinstance(value, tuple):
-            raise ValueError("{} is not a tuple".format(value))
+        if not isinstance(value, Iterable):
+            raise ValueError("{} is not an iterable".format(value))
         return super().db_value(
-            pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
+            json.dumps(tuple(value), ensure_ascii=False)
         )
 
     def python_value(self, value):
-        return pickle.loads(bytes(value))
+        return tuple(json.loads(value))
 
 
 class SubstitutableDatabase(object):
-    def __init__(self, filepath, tables=[]):
+    def __init__(self, filepath=":memory:", tables=[]):
         self._tables = tables
-        if filepath is not None:
-            self._create_database(filepath)
+        self._create_database(filepath)
 
     def _create_database(self, filepath):
-        self._db = SqliteDatabase(abspath(filepath))
+        self._db = SqliteDatabase(abspath(filepath) if filepath != ":memory:" else filepath)
         for model in self._tables:
             model.bind(self._db, bind_refs=False, bind_backrefs=False)
         self._db.connect()
-        self._db.create_tables(self._tables)
+        self._db.create_tables(self._tables, safe=True)
 
     def _change_path(self, filepath):
         self.close()

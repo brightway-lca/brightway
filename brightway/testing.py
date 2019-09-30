@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from . import projects, project_database, backend_mapping
 from pathlib import Path
+from pathlib import Path
 import pytest
+import tempfile
 
 
 class FakeBackend:
@@ -34,14 +36,16 @@ class FakeBackend:
         self.imported_filepath = filepath
 
 
-@pytest.fixture
-def bwtest(monkeypatch, tmp_path):
-    project_database._change_path(tmp_path / "projects.test.db")
-    ld = tmp_path / "__logs__"
-    ld.mkdir()
-    monkeypatch.setattr(projects, "base_dir", tmp_path)
-    monkeypatch.setattr(projects, "base_log_dir", ld)
-    monkeypatch.setitem(backend_mapping, "tests", FakeBackend())
-    return tmp_path
+@pytest.fixture(scope="function")
+def bwtest(monkeypatch):
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        project_database._change_path(td / "projects.test.db")
+        ld = td / "__logs__"
+        ld.mkdir()
+        monkeypatch.setattr(projects, "base_dir", td)
+        monkeypatch.setattr(projects, "base_log_dir", ld)
+        monkeypatch.setitem(backend_mapping, "tests", FakeBackend())
+        yield td
 
 

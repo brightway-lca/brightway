@@ -47,3 +47,14 @@ def get_dir_size(dirpath):
         sum(os.path.getsize(os.path.join(root, name))
         for name in files
     ) for root, dirs, files in os.walk(dirpath)) / 1e9
+
+
+def md5(filepath, blocksize=65536):
+    """Generate MD5 hash for file at `filepath`"""
+    hasher = hashlib.md5()
+    fo = open(filepath, 'rb')
+    buf = fo.read(blocksize)
+    while len(buf) > 0:
+        hasher.update(buf)
+        buf = fo.read(blocksize)
+    return hasher.hexdigest()
