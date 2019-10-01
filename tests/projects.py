@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from brightway import projects, Project, backend_mapping
-from brightway.testing import bwtest
+from brightway_projects import projects, Project, backend_mapping
+from brightway_projects.testing import bwtest
 import os
 import platform
 import pytest

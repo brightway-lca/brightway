@@ -11,11 +11,11 @@ requirements = [
 test_requirements = ['pytest', 'bw-default-backend']
 
 setup(
-    name='brightway',
+    name='brightway_projects',
     version='3.0.dev',
-    description='Python framework for Life Cycle Assessment',
+    description='Management of projects in the Brightway Life Cycle Asssessment framework',
     long_description=open(path.join(here, "README.md")).read(),
-    url='https://github.com/pypa/sampleproject',
+    url='https://github.com/brightway-lca/brightway_projects',
     author='Chris Mutel',
     author_email='cmutel@gmail.com',
     license="NewBSD 3-clause; LICENSE",
