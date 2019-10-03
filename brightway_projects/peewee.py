@@ -52,7 +52,7 @@ class SubstitutableDatabase(object):
         self._create_database(filepath)
 
     def _create_database(self, filepath):
-        self._db = SqliteDatabase(abspath(filepath) if filepath != ":memory:" else filepath)
+        self._db = SqliteDatabase(abspath(filepath) if filepath != ":memory:" else filepath, pragmas={'foreign_keys': 1})
         for model in self._tables:
             model.bind(self._db, bind_refs=False, bind_backrefs=False)
         self._db.connect()

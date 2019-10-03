@@ -109,6 +109,7 @@ class ProjectManager(collections.abc.Iterable):
         if name in self:
             print("This project already exists; use "
                   "`projects.select({})` to switch.".format(name))
+            return
 
         if backends is None and 'default' not in backend_mapping:
             raise MissingBackend("No `default` backend available; "
