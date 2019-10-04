@@ -31,7 +31,7 @@ install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then
       conda create -n test-environment python=$TRAVIS_PYTHON_VERSION appdirs peewee pytest pytest-cov coveralls;
       source activate test-environment;
-      pip3 install -e .;
+      pip install -e .;
     else
       pip3 install -r ci/test-requirements.txt;
       pip3 install -e .;
