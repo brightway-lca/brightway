@@ -8,6 +8,7 @@ import tempfile
 
 class FakeBackend:
     __brightway_common_api__ = True
+    __brightway_common_api_version__ = 1
     activated = deactivated = created = copied = None
     deleted = exported = imported = None
 

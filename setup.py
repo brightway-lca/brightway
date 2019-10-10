@@ -8,7 +8,7 @@ requirements = [
     'peewee',
 ]
 
-test_requirements = ['pytest', 'bw-default-backend']
+test_requirements = ['pytest', 'bw_default_backend']
 
 setup(
     name='brightway_projects',
