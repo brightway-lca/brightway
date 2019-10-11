@@ -1,3 +1,4 @@
+from brightway_projects.errors import InvalidName
 from brightway_projects.testing import bwtest
 from brightway_projects.processing import (
     chunked,
@@ -6,6 +7,7 @@ from brightway_projects.processing import (
     create_datapackage_metadata,
     create_numpy_structured_array,
     format_datapackage_resource,
+    NAME_RE,
 )
 from pathlib import Path
 import numpy as np
@@ -88,118 +90,51 @@ def test_create_array_chunk_data():
         assert result['row_value'].sum() == 0
 
 
-# @bw2test
-# def test_sqlite_processed_array_order():
-#     database = DatabaseChooser("testy")
-#     data = {
-#         ("testy", "C"): {},
-#         ("testy", "A"): {'type': 'biosphere'},
-#         ("testy", "B"): {'exchanges': [
-#             {'input': ("testy", "A"),
-#              'amount': 1,
-#              'type': 'technosphere'},
-#             {'input': ("testy", "A"),
-#              'amount': 2,
-#              'type': 'technosphere'},
-#             {'input': ("testy", "C"),
-#              'amount': 2,
-#              'type': 'biosphere'},
-#             {'input': ("testy", "C"),
-#              'amount': 3,
-#              'type': 'biosphere'},
-#             {'input': ("testy", "B"),
-#              'amount': 4,
-#              'type': 'production'},
-#             {'input': ("testy", "B"),
-#              'amount': 1,
-#              'type': 'production'},
-#         ]}
-#     }
-#     database.write(data)
-#     lookup = {k: mapping[("testy", k)] for k in "ABC"}
-#     expected = sorted([
-#         (lookup['A'], lookup['B'], 1),
-#         (lookup['A'], lookup['B'], 2),
-#         (lookup['B'], lookup['B'], 1),
-#         (lookup['B'], lookup['B'], 4),
-#         (lookup['C'], lookup['C'], 1),
-#         (lookup['C'], lookup['B'], 2),
-#         (lookup['C'], lookup['B'], 3),
-#     ])
-#     array = np.load(database.filepath_processed())
-#     assert array.shape == (7,)
-#     result = [(array['input'][x], array['output'][x], array['amount'][x])
-#             for x in range(7)]
-#     assert expected == result
+def test_format_datapackage_metadata():
+    expected = {
+        "profile": "data-package",
+        "name": "a",
+        "id": "b",
+        "licenses": "c",
+    }
+    result = create_datapackage_metadata("a", [], id_="b", metadata={'licenses': 'c'})
+    assert result['created']
+    for k, v in expected.items():
+        assert result[k] == v
 
-# @bw2test
-# def test_singlefile_processed_array_order():
-#     database = DatabaseChooser("testy", "singlefile")
-#     data = {
-#         ("testy", "C"): {},
-#         ("testy", "A"): {'type': 'biosphere'},
-#         ("testy", "B"): {'exchanges': [
-#             {'input': ("testy", "A"),
-#              'amount': 1,
-#              'type': 'technosphere'},
-#             {'input': ("testy", "A"),
-#              'amount': 2,
-#              'type': 'technosphere'},
-#             {'input': ("testy", "C"),
-#              'amount': 2,
-#              'type': 'biosphere'},
-#             {'input': ("testy", "C"),
-#              'amount': 3,
-#              'type': 'biosphere'},
-#             {'input': ("testy", "B"),
-#              'amount': 4,
-#              'type': 'production'},
-#             {'input': ("testy", "B"),
-#              'amount': 1,
-#              'type': 'production'},
-#         ]}
-#     }
-#     database.write(data)
-#     lookup = {k: mapping[("testy", k)] for k in "ABC"}
-#     expected = sorted([
-#         (lookup['A'], lookup['B'], 1),
-#         (lookup['A'], lookup['B'], 2),
-#         (lookup['B'], lookup['B'], 1),
-#         (lookup['B'], lookup['B'], 4),
-#         (lookup['C'], lookup['C'], 1),
-#         (lookup['C'], lookup['B'], 2),
-#         (lookup['C'], lookup['B'], 3),
-#     ])
-#     array = np.load(database.filepath_processed())
-#     assert array.shape == (7,)
-#     result = [(array['input'][x], array['output'][x], array['amount'][x])
-#             for x in range(7)]
-#     assert expected == result
 
-# @bw2test
-# def test_process_adds_to_mappings():
-#     database = DatabaseChooser("testy")
-#     database_data = {
-#         ("testy", "A"): {'location': 'CH'},
-#         ("testy", "B"): {'location': 'DE'},
-#     }
-#     database.write(database_data)
-#     assert ("testy", "A") in mapping and ("testy", "B") in mapping
-#     assert "CH" in geomapping and "DE" in geomapping
+def tedef test_name_re():
+    assert NAME_RE.match("hey_you")
+    assert not NAME_RE.match("hey_you!")
 
-# @bw2test
-# def test_process_unknown_object():
-#     database = DatabaseChooser("testy")
-#     data = {
-#         ("testy", "A"): {},
-#         ("testy", "B"): {'exchanges': [
-#             {'input': ("testy", "A"),
-#              'amount': 1,
-#              'type': 'technosphere'},
-#             {'input': ("testy", "C"),
-#              'amount': 1,
-#              'type': 'technosphere'},
-#         ]},
-#     }
-#     with pytest.raises(UnknownObject):
-#         database.write(data)
+
+st_format_datapackage_metadata_no_id():
+    result = create_datapackage_metadata("a", [])
+    assert result['id']
+    assert len(result['id']) > 16
+
+
+def test_format_datapackage_metadata_default_licenses():
+    result = create_datapackage_metadata("a", [])
+    assert result['licenses'] == [
+        {
+            "name": "ODC-PDDL-1.0",
+            "path": "http://opendatacommons.org/licenses/pddl/",
+            "title": "Open Data Commons Public Domain Dedication and License v1.0",
+        }
+    ]
+
+
+def test_format_datapackage_metadata_invalid_name():
+    with pytest.raises(InvalidName):
+        create_datapackage_metadata("woo!", {})
+
+
+def test_format_datapackage_resource():
+    with tempfile.TemporaryDirectory() as td:
+        pass
+
+
+def test_calculation_package():
+    with tempfile.TemporaryDirectory() as td:
+        pass

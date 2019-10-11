@@ -27,7 +27,7 @@ COMMON_DTYPE = [
     ("negative", np.bool),
     ("flip", np.bool),
 ]
-
+NAME_RE = re.compile(r"^[\w\-\.]*$")
 
 def chunked(iterable, chunk_size):
     # Black magic, see https://stackoverflow.com/a/31185097
@@ -92,8 +92,7 @@ def create_datapackage_metadata(name, resources, id_=None, metadata=None):
         }
     ]
 
-    name_re = re.compile(r"^[\w\-\.]*$")
-    if not name_re.match(name):
+    if not NAME_RE.match(name):
         raise InvalidName(
             "Provided name violates datapackage spec (https://frictionlessdata.io/specs/data-package/)"
         )
