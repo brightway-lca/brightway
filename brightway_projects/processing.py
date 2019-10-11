@@ -2,60 +2,66 @@ from .errors import InvalidName
 from .filesystem import md5, safe_filename
 from pathlib import Path
 import datetime
+import itertools
 import json
 import numpy as np
 import re
+import tempfile
 import uuid
 import zipfile
-import tempfile
 
 # Max signed 32 bit integer, compatible with Windows
 MAX_SIGNED_32BIT_INT = 2147483647
+COMMON_DTYPE = [
+    ("row_value", np.uint32),
+    ("col_value", np.uint32),
+    ("row_index", np.uint32),
+    ("col_index", np.uint32),
+    ("uncertainty_type", np.uint8),
+    ("amount", np.float32),
+    ("loc", np.float32),
+    ("scale", np.float32),
+    ("shape", np.float32),
+    ("minimum", np.float32),
+    ("maximum", np.float32),
+    ("negative", np.bool),
+    ("flip", np.bool),
+]
 
 
 def chunked(iterable, chunk_size):
     # Black magic, see https://stackoverflow.com/a/31185097
     # and https://docs.python.org/3/library/functions.html#iter
+    iterable = iter(iterable)  # Fix e.g. range from restarting
     return iter(lambda: list(itertools.islice(iterable, chunk_size)), [])
 
 
 def create_numpy_structured_array(iterable, filepath, nrows=None, format_function=None):
     """"""
-    dtype = [
-        ("row_value", np.uint32),
-        ("col_value", np.uint32),
-        ("row_index", np.uint32),
-        ("col_index", np.uint32),
-        ("uncertainty_type", np.uint8),
-        ("amount", np.float32),
-        ("loc", np.float32),
-        ("scale", np.float32),
-        ("shape", np.float32),
-        ("minimum", np.float32),
-        ("maximum", np.float32),
-        ("negative", np.bool),
-        ("flip", np.bool),
-    ]
     if format_function is None:
         format_function = lambda x, y: x
 
     if nrows:
-        array = np.zeros(nrows, dtype=dtype)
+        array = np.zeros(nrows, dtype=COMMON_DTYPE)
         for i, row in enumerate(iterable):
-            array[i] = format_function(row, dtype)
+            if i > (nrows - 1):
+                raise ValueError("More rows than `nrows`")
+            array[i] = format_function(row, COMMON_DTYPE)
     else:
-        arrays, BUCKET, array = [], 25000, np.zeros(BUCKET, dtype=dtype)
+        arrays, BUCKET = [], 25000
+        array = np.zeros(BUCKET, dtype=COMMON_DTYPE)
         for chunk in chunked(iterable, BUCKET):
             for i, row in enumerate(chunk):
-                array[i] = format_function(row, dtype)
+                array[i] = format_function(row, COMMON_DTYPE)
             if i < BUCKET - 1:
                 array = array[: i + 1]
                 arrays.append(array)
             else:
                 arrays.append(array)
-                array = np.zeros(BUCKET, dtype=dtype)
-        array = np.hstack(*arrays)
+                array = np.zeros(BUCKET, dtype=COMMON_DTYPE)
+        array = np.hstack(arrays)
 
+    array.sort(order=("row_value", "col_value", "uncertainty_type", "amount"))
     np.save(filepath, array, allow_pickle=False)
 
 
@@ -86,7 +92,7 @@ def create_datapackage_metadata(name, resources, id_=None, metadata=None):
         }
     ]
 
-    name_re = re.compile("^[\w\-\.]*$")
+    name_re = re.compile(r"^[\w\-\.]*$")
     if not name_re.match(name):
         raise InvalidName(
             "Provided name violates datapackage spec (https://frictionlessdata.io/specs/data-package/)"
@@ -150,6 +156,22 @@ def create_calculation_package(
 ):
     """Create a calculation package for use in ``brightway_calc``.
 
+    The ``format_function`` should return a tuple of data that fits the structured array datatype, i.e.
+
+        ("row_value", np.uint32),
+        ("col_value", np.uint32),
+        ("row_index", np.uint32),
+        ("col_index", np.uint32),
+        ("uncertainty_type", np.uint8),
+        ("amount", np.float32),
+        ("loc", np.float32),
+        ("scale", np.float32),
+        ("shape", np.float32),
+        ("minimum", np.float32),
+        ("maximum", np.float32),
+        ("negative", np.bool),
+        ("flip", np.bool),
+
     Args:
         name (str): Name of this calculation package
         resources (iterable): Resources is an iterable of dictionaries with the keys:
@@ -157,7 +179,7 @@ def create_calculation_package(
             matrix (str): The name of the matrix to build. See the documentation for ``bw_calc`` for more details.
             data (iterable): The numerical data to be stored
             nrows (int, optional):  The number of rows in ``array``. Will be counted if not provided, but with an efficiency penalty.
-            format_function (callable, optional): Function that formats data to structured array columns
+            format_function (callable, optional): Function that formats data to structured array columns.
         id_ (str, optional): Unique ID of this calculation package
         metadata (dict, optional): Additional metadata such as licenses, RNG seeds, etc.
         repalce (bool, optional): Replace an existing calculation package with the same name
