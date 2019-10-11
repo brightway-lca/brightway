@@ -33,7 +33,6 @@ def create_numpy_structured_array(
         ('negative', np.bool),
         ('flip', np.bool),
     ]
-    ROW_COL = [("row", np.uint32), ("col", np.uint32)]
     if format_function is None:
         format_function = default_formatter
     if dtype is None:
@@ -41,10 +40,10 @@ def create_numpy_structured_array(
     else:
         dtype = list(dtype)
     if add_row_col:
-        if not any(line[0] == "row" for line in dtype):
-            dtype.append(('row', np.uint32))
-        if not any(line[0] == "col" for line in dtype):
-            dtype.append(('col', np.uint32))
+        if not any(line[0] == "row_index" for line in dtype):
+            dtype.append(('row_index', np.uint32))
+        if not any(line[0] == "col_index" for line in dtype):
+            dtype.append(('col_index', np.uint32))
     dtype.sort()
     array = np.zeros(nrows, dtype=dtype)
     for i, row in enumerate(iterable):
@@ -198,15 +197,20 @@ def create_numpy_structured_array(
 def create_datapackage_metadata(name, id_, resources, metadata=None):
     """Format metadata for a processed array datapackage.
 
-    All metadata elements, including ``name`` and ``id_``, should follow the `datapackage specification <https://frictionlessdata.io/specs/data-package/>`__.
+    All metadata elements should follow the `datapackage specification <https://frictionlessdata.io/specs/data-package/>`__.
 
-    ``metadata``, if provided, should be a dictionary. The default license is the `Open Data Commons Public Domain Dedication and License v1.0 <http://opendatacommons.org/licenses/pddl/>`__.
+    Licenses are specified as a list in ``metadata``. The default license is the `Open Data Commons Public Domain Dedication and License v1.0 <http://opendatacommons.org/licenses/pddl/>`__.
 
-    The data format for resources is documented in the function ``format_datapackage_resource``.
+    Args:
+        name (str): Name of this data package
+        id_ (str): Unique ID of this data package
+        resources (iterable): List of resources following requirements in ``format_datapackage_resource``
+        metadata (dict): Additional metadata, such as the licenses for this package
+
+    Returns:
+        A dictionary ready for writing to a ``datapackage.json`` file.
 
     TODO: Write validation tests for all metadata elements.
-
-    Returns a dictionary ready for writing to a ``datapackage.json`` file.
 
     """
     DEFAULT_LICENSES = [
@@ -217,12 +221,14 @@ def create_datapackage_metadata(name, id_, resources, metadata=None):
         }
     ]
 
-    # TODO: Validation
     name_re = re.compile("^[\w\-\.]*$")
     if not name_re.match(name):
         raise InvalidName(
             "Provided name violates datapackage spec (https://frictionlessdata.io/specs/data-package/)"
         )
+
+    if metadata is None:
+        metadata = {}
 
     return {
         "profile": "data-package",
@@ -235,32 +241,41 @@ def create_datapackage_metadata(name, id_, resources, metadata=None):
 
 
 def format_datapackage_resource(res):
-    """Format metadata for a datapackage resource.
+    """Format metadata for a `datapackage resource <https://frictionlessdata.io/specs/data-resource/>`__.
 
     ``res`` should be a dictionary with the following keys:
 
-        * ``filename``: str. Filename for saved Numpy array
-        * ``array``: numpy.ndarray. The Numpy array to be saved
-        * ``matrix``: str. The name of the matrix to build. See the documentation for ``bw_calc`` for more details.
-        * ``dirpath``: pathlib.Path. The directory where the datapackage and resource files will be saved.
+        name (str): Simple name or identifier to be used for this matrix data
+        filename (str): Filename for saved Numpy array
+        array (numpy.ndarray): The Numpy array to be saved
+        matrix (str): The name of the matrix to build. See the documentation for ``bw_calc`` for more details.
+        dirpath (pathlib.Path): The directory where the datapackage and resource files will be saved.
 
-    ``res`` can also have the following *optional* keys:
+    ``res`` can also have the following `optional keys <https://frictionlessdata.io/specs/data-resource/>`__: ``description`` and ``title``.
 
-        * ``flip-sign-column``: str. Name of boolean column which indicates whether the sign of the amount should be flipped (i.e. positive to negative). If not specified, the default value of ``flip`` is used.
+    Returns:
+        A dictionary ready for JSON serialization in the datapackage format.
 
-    Returns a dictionary ready for JSON serialization in the datapackage format.
+    TODO: Think about declaring a custom JSON schema for our datapackages, see:
+
+        * https://frictionlessdata.io/specs/profiles/
+        * https://frictionlessdata.io/schemas/data-resource.json
+        * https://json-schema.org/
 
     """
-    OPTIONAL_KEYS = {"flip-sign-column"}
+    OPTIONAL_KEYS = {"description", "title"}
     obj = {
-        "dtype": str(res["array"].dtype),
+        # Datapackage generic
         "format": "npy",
         "mediatype": "application/octet-stream",
-        "matrix": res["matrix"],
-        "md5": md5(res["dirpath"] / res["fp"]),
-        "shape": res["array"].shape,
+        "path": res["filename"],
+        "name": res["name"],
+        "md5": md5(res["dirpath"] / res["filename"]),
         "profile": "data-resource",
-        "flip-sign-column": res.get('flip-sign-column', 'flip'),
+        # Brightway specific
+        "dtype": str(res["array"].dtype),
+        "matrix": res["matrix"],
+        "shape": res["array"].shape,
     }
     for key, value in res.items():
         if key in OPTIONAL_KEYS:
