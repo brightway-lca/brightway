@@ -108,7 +108,7 @@ class ProjectManager(collections.abc.Iterable):
     def create(self, name, backends=('default',), switch=True, default=False, **kwargs):
         if name in self:
             print("This project already exists; use "
-                  "`projects.select({})` to switch.".format(name))
+                  "`projects.select('{}'')` to switch.".format(name))
             return
 
         if backends is None and 'default' not in backend_mapping:
