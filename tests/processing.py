@@ -156,8 +156,6 @@ def test_calculation_package():
     }]
     with tempfile.TemporaryDirectory() as td:
         fp = create_calculation_package(td, "test-package", resources)
-        print(fp)
-        raise ValueError
         # Test data in fp
 
 
