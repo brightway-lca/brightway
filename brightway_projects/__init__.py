@@ -1,3 +1,4 @@
+from .version import version as __version__
 __all__ = [
     "backend_mapping",
     "JSONField",
@@ -6,8 +7,6 @@ __all__ = [
     "projects",
     "TupleField",
 ]
-
-__version__ = (3, 0, "dev")
 
 
 from .peewee import JSONField, PathField, SubstitutableDatabase, TupleField
