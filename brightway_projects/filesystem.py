@@ -7,7 +7,7 @@ import appdirs
 import unicodedata
 import warnings
 
-re_slugify = re.compile('[^\w\s-]', re.UNICODE)
+re_slugify = re.compile("[^\w\s-]", re.UNICODE)
 
 
 def safe_filename(string, add_hash=True):
@@ -17,14 +17,9 @@ def safe_filename(string, add_hash=True):
 
     From http://stackoverflow.com/questions/295135/turn-a-string-into-a-valid-filename-in-python"""
     safe = re.sub(
-        '[-\s]+',
-        '-',
-        str(
-            re_slugify.sub(
-                '',
-                unicodedata.normalize('NFKD', str(string))
-            ).strip()
-        )
+        "[-\s]+",
+        "-",
+        str(re_slugify.sub("", unicodedata.normalize("NFKD", str(string))).strip()),
     )
     if add_hash:
         if isinstance(string, str):
@@ -43,16 +38,19 @@ def get_dir_size(dirpath):
     """Modified from http://stackoverflow.com/questions/12480367/how-to-generate-directory-size-recursively-in-python-like-du-does.
 
     Does not follow symbolic links"""
-    return sum(
-        sum(os.path.getsize(os.path.join(root, name))
-        for name in files
-    ) for root, dirs, files in os.walk(dirpath)) / 1e9
+    return (
+        sum(
+            sum(os.path.getsize(os.path.join(root, name)) for name in files)
+            for root, dirs, files in os.walk(dirpath)
+        )
+        / 1e9
+    )
 
 
 def md5(filepath, blocksize=65536):
     """Generate MD5 hash for file at `filepath`"""
     hasher = hashlib.md5()
-    fo = open(filepath, 'rb')
+    fo = open(filepath, "rb")
     buf = fo.read(blocksize)
     while len(buf) > 0:
         hasher.update(buf)

@@ -29,6 +29,7 @@ COMMON_DTYPE = [
 ]
 NAME_RE = re.compile(r"^[\w\-\.]*$")
 
+
 def chunked(iterable, chunk_size):
     # Black magic, see https://stackoverflow.com/a/31185097
     # and https://docs.python.org/3/library/functions.html#iter
@@ -118,9 +119,9 @@ def format_datapackage_resource(res):
         name (str): Simple name or identifier to be used for this matrix data
         filename (str): Filename for saved Numpy array
         matrix (str): The name of the matrix to build. See the documentation for ``bw_calc`` for more details.
-        dirpath (pathlib.Path): The directory where the datapackage and resource files will be saved.
+        dirpath (pathlib.Path): The directory where the datapackage and resource files are saved.
 
-    ``res`` can also have the following `optional keys <https://frictionlessdata.io/specs/data-resource/>`__: ``description``, and ``title``.
+    ``res`` can also have `optional keys <https://frictionlessdata.io/specs/data-resource/>`__ like ``description``, and ``title``.
 
     Returns:
         A dictionary ready for JSON serialization in the datapackage format.
@@ -132,7 +133,6 @@ def format_datapackage_resource(res):
         * https://json-schema.org/
 
     """
-    OPTIONAL_KEYS = {"description", "title"}
     obj = {
         # Datapackage generic
         "format": "npy",
@@ -145,7 +145,7 @@ def format_datapackage_resource(res):
         "matrix": res["matrix"],
     }
     for key, value in res.items():
-        if key in OPTIONAL_KEYS:
+        if key not in obj and key not in {"dirpath", "filename"}:
             obj[key] = value
     return obj
 
@@ -190,7 +190,7 @@ def create_calculation_package(
     directory = Path(directory)
     assert directory.is_dir()
 
-    archive = directory / safe_filename(name) + ".zip"
+    archive = directory / (safe_filename(name) + ".zip")
     if archive.is_file():
         if replace:
             archive.unlink()

@@ -1,25 +1,21 @@
 __all__ = [
-    'backend_mapping',
-    'JSONField',
-    'PathField',
-    'Project',
-    'projects',
-    'TupleField',
+    "backend_mapping",
+    "JSONField",
+    "PathField",
+    "Project",
+    "projects",
+    "TupleField",
 ]
 
 __version__ = (3, 0, "dev")
 
 
-from .peewee import (
-    JSONField,
-    PathField,
-    SubstitutableDatabase,
-    TupleField,
-)
+from .peewee import JSONField, PathField, SubstitutableDatabase, TupleField
 
 backend_mapping = {}
 
 from .base_dir import get_base_directories
+
 _BASE_DIR, _BASE_LOG_DIR = get_base_directories()
 
 from .projects import Project, ProjectManager

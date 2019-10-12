@@ -48,5 +48,3 @@ def bwtest(monkeypatch):
         monkeypatch.setattr(projects, "base_log_dir", ld)
         monkeypatch.setitem(backend_mapping, "tests", FakeBackend())
         yield td
-
-

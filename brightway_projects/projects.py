@@ -32,7 +32,7 @@ class Project(Model):
             return self.name.lower() < other.name.lower()
 
     def backends_resolved(self):
-        for label in (self.backends or []):
+        for label in self.backends or []:
             yield backend_mapping[label]
 
 
@@ -55,8 +55,10 @@ class ProjectManager(collections.abc.Iterable):
         create_dir(self.base_dir)
         create_dir(self.base_log_dir)
         if not os.access(self.base_dir, os.W_OK):
-            WARNING = ("Brightway directory exists, but is read-only. "
-                        "Please fix this and restart.")
+            WARNING = (
+                "Brightway directory exists, but is read-only. "
+                "Please fix this and restart."
+            )
             warnings.warn(WARNING)
 
     def __iter__(self):
@@ -71,17 +73,23 @@ class ProjectManager(collections.abc.Iterable):
 
     def __repr__(self):
         if len(self) > 20:
-            return ("Brightway projects manager with {} objects, including:"
-                    "{}\nUse `sorted(projects)` to get full list, "
-                    "`projects.report()` to get\n\ta report on all projects.").format(
+            return (
+                "Brightway projects manager with {} objects, including:"
+                "{}\nUse `sorted(projects)` to get full list, "
+                "`projects.report()` to get\n\ta report on all projects."
+            ).format(
                 len(self),
-                "".join(["\n\t{}".format(x) for x in sorted([x.name for x in self])[:10]])
+                "".join(
+                    ["\n\t{}".format(x) for x in sorted([x.name for x in self])[:10]]
+                ),
             )
         else:
-            return ("Brightway projects manager with {} objects:{}"
-                    "\nUse `projects.report()` to get a report on all projects.").format(
+            return (
+                "Brightway projects manager with {} objects:{}"
+                "\nUse `projects.report()` to get a report on all projects."
+            ).format(
                 len(self),
-                "".join(["\n\t{}".format(x) for x in sorted([x.name for x in self])])
+                "".join(["\n\t{}".format(x) for x in sorted([x.name for x in self])]),
             )
 
     @property
@@ -105,15 +113,18 @@ class ProjectManager(collections.abc.Iterable):
             backend.deactivate_project(self.current)
         self.current = None
 
-    def create(self, name, backends=('default',), switch=True, default=False, **kwargs):
+    def create(self, name, backends=("default",), switch=True, default=False, **kwargs):
         if name in self:
-            print("This project already exists; use "
-                  "`projects.select('{}'')` to switch.".format(name))
+            print(
+                "This project already exists; use "
+                "`projects.select('{}'')` to switch.".format(name)
+            )
             return
 
-        if backends is None and 'default' not in backend_mapping:
-            raise MissingBackend("No `default` backend available; "
-                                  "Must specify a project backend.")
+        if backends is None and "default" not in backend_mapping:
+            raise MissingBackend(
+                "No `default` backend available; " "Must specify a project backend."
+            )
 
         dirpath = self.base_dir / safe_filename(name)
         dirpath.mkdir()
@@ -190,9 +201,7 @@ class ProjectManager(collections.abc.Iterable):
         """Give a report on current projects, backend, and directory sizes.
 
         Returns tuples of ``(project name, backend name, and directory size (GB))``."""
-        return sorted([
-            (x.name, x.backends, get_dir_size(x.directory)) for x in self
-        ])
+        return sorted([(x.name, x.backends, get_dir_size(x.directory)) for x in self])
 
     # def use_temp_directory(self):
     #     """Point the ProjectManager towards a temporary directory instead of `user_data_dir`.

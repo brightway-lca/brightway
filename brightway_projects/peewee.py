@@ -26,9 +26,7 @@ class PathField(TextField):
 
 class PickleField(BlobField):
     def db_value(self, value):
-        return super().db_value(
-            pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
-        )
+        return super().db_value(pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL))
 
     def python_value(self, value):
         return pickle.loads(bytes(value))
@@ -38,9 +36,7 @@ class TupleField(BlobField):
     def db_value(self, value):
         if not isinstance(value, Iterable):
             raise ValueError("{} is not an iterable".format(value))
-        return super().db_value(
-            json.dumps(tuple(value), ensure_ascii=False)
-        )
+        return super().db_value(json.dumps(tuple(value), ensure_ascii=False))
 
     def python_value(self, value):
         return tuple(json.loads(value))
@@ -52,7 +48,10 @@ class SubstitutableDatabase(object):
         self._create_database(filepath)
 
     def _create_database(self, filepath):
-        self._db = SqliteDatabase(abspath(filepath) if filepath != ":memory:" else filepath, pragmas={'foreign_keys': 1})
+        self._db = SqliteDatabase(
+            abspath(filepath) if filepath != ":memory:" else filepath,
+            pragmas={"foreign_keys": 1},
+        )
         for model in self._tables:
             model.bind(self._db, bind_refs=False, bind_backrefs=False)
         self._db.connect()
@@ -67,7 +66,7 @@ class SubstitutableDatabase(object):
 
     def _vacuum(self):
         print("Vacuuming database ")
-        self.execute_sql('VACUUM;')
+        self.execute_sql("VACUUM;")
 
     def __getattr__(self, attr):
         return getattr(self._db, attr)
