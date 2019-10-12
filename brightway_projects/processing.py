@@ -133,6 +133,7 @@ def format_datapackage_resource(res):
         * https://json-schema.org/
 
     """
+    SKIP = {"dirpath", "filename", "data", "nrows", "format_function"}
     obj = {
         # Datapackage generic
         "format": "npy",
@@ -145,7 +146,7 @@ def format_datapackage_resource(res):
         "matrix": res["matrix"],
     }
     for key, value in res.items():
-        if key not in obj and key not in {"dirpath", "filename"}:
+        if key not in obj and key not in SKIP:
             obj[key] = value
     return obj
 

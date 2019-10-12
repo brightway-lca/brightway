@@ -15,6 +15,9 @@ import pytest
 import tempfile
 
 
+fixtures_dir = Path(__file__, "..").resolve() / "fixtures"
+
+
 def test_chunked():
     c = chunked(range(600), 250)
     for x in next(c):
@@ -39,8 +42,8 @@ def test_create_array():
         result = np.load(fp)
         assert result.shape == (2,)
         assert result.dtype == COMMON_DTYPE
-        assert np.allclose(result['row_value'], [0, 12])
-        assert np.allclose(result['flip'], [False, True])
+        assert np.allclose(result["row_value"], [0, 12])
+        assert np.allclose(result["flip"], [False, True])
 
 
 def test_create_array_format_function():
@@ -53,27 +56,23 @@ def test_create_array_format_function():
         result = np.load(fp)
         assert result.shape == (10,)
         assert result.dtype == COMMON_DTYPE
-        assert result['row_value'].sum() == 20
+        assert result["row_value"].sum() == 20
 
 
 def test_create_array_specify_nrows():
     with tempfile.TemporaryDirectory() as td:
         fp = Path(td) / "array.npy"
-        data = [
-            tuple(list(range(11)) + [False, False]),
-        ] * 200
+        data = [tuple(list(range(11)) + [False, False])] * 200
         create_numpy_structured_array(data, fp, nrows=200)
         result = np.load(fp)
         assert result.shape == (200,)
-        assert result['row_value'].sum() == 0
+        assert result["row_value"].sum() == 0
 
 
 def test_create_array_specify_nrows_too_many():
     with tempfile.TemporaryDirectory() as td:
         fp = Path(td) / "array.npy"
-        data = [
-            tuple(list(range(11)) + [False, False]),
-        ] * 200
+        data = [tuple(list(range(11)) + [False, False])] * 200
         with pytest.raises(ValueError):
             create_numpy_structured_array(data, fp, nrows=100)
 
@@ -81,42 +80,35 @@ def test_create_array_specify_nrows_too_many():
 def test_create_array_chunk_data():
     with tempfile.TemporaryDirectory() as td:
         fp = Path(td) / "array.npy"
-        data = [
-            tuple(list(range(11)) + [False, False]),
-        ] * 90000
+        data = [tuple(list(range(11)) + [False, False])] * 90000
         create_numpy_structured_array(data, fp)
         result = np.load(fp)
         assert result.shape == (90000,)
-        assert result['row_value'].sum() == 0
+        assert result["row_value"].sum() == 0
 
 
 def test_format_datapackage_metadata():
-    expected = {
-        "profile": "data-package",
-        "name": "a",
-        "id": "b",
-        "licenses": "c",
-    }
-    result = create_datapackage_metadata("a", [], id_="b", metadata={'licenses': 'c'})
-    assert result['created']
+    expected = {"profile": "data-package", "name": "a", "id": "b", "licenses": "c"}
+    result = create_datapackage_metadata("a", [], id_="b", metadata={"licenses": "c"})
+    assert result["created"]
     for k, v in expected.items():
         assert result[k] == v
 
 
-def tedef test_name_re():
+def test_name_re():
     assert NAME_RE.match("hey_you")
     assert not NAME_RE.match("hey_you!")
 
 
-st_format_datapackage_metadata_no_id():
+def test_format_datapackage_metadata_no_id():
     result = create_datapackage_metadata("a", [])
-    assert result['id']
-    assert len(result['id']) > 16
+    assert result["id"]
+    assert len(result["id"]) > 16
 
 
 def test_format_datapackage_metadata_default_licenses():
     result = create_datapackage_metadata("a", [])
-    assert result['licenses'] == [
+    assert result["licenses"] == [
         {
             "name": "ODC-PDDL-1.0",
             "path": "http://opendatacommons.org/licenses/pddl/",
@@ -131,10 +123,51 @@ def test_format_datapackage_metadata_invalid_name():
 
 
 def test_format_datapackage_resource():
-    with tempfile.TemporaryDirectory() as td:
-        pass
+    given = {
+        "dirpath": fixtures_dir,
+        "filename": "basic_array.npy",
+        "name": "test-name",
+        "matrix": "technosphere",
+        "description": "some words",
+        "foo": "bar",
+    }
+    expected = {
+        "format": "npy",
+        "mediatype": "application/octet-stream",
+        "path": "basic_array.npy",
+        "name": "test-name",
+        "md5": "45aebe85c3a7b11d0427a98c07a4b90d",
+        "profile": "data-resource",
+        "matrix": "technosphere",
+        "description": "some words",
+        "foo": "bar",
+    }
+    assert format_datapackage_resource(given) == expected
 
 
 def test_calculation_package():
+    resources = [{
+        'name': 'first-resource',
+        'matrix': 'technosphere',
+        'data': [
+            tuple(list(range(11)) + [False, False]),
+            tuple(list(range(12, 23)) + [True, True]),
+        ],
+    }]
     with tempfile.TemporaryDirectory() as td:
-        pass
+        fp = create_calculation_package(td, "test-package", resources)
+        print(fp)
+        raise ValueError
+        # Test data in fp
+
+
+def test_calculation_package_name_conflict():
+    pass
+
+
+def test_calculation_package_specify_id():
+    pass
+
+
+def test_calculation_package_metadata():
+    pass
