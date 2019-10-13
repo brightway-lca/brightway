@@ -152,7 +152,7 @@ def format_datapackage_resource(res):
 
 
 def create_calculation_package(
-    directory, name, resources, id_=None, metadata=None, replace=True
+    directory, name, resources, id_=None, metadata=None, replace=True, compress=True
 ):
     """Create a calculation package for use in ``brightway_calc``.
 
@@ -191,34 +191,41 @@ def create_calculation_package(
     directory = Path(directory)
     assert directory.is_dir()
 
-    archive = directory / (safe_filename(name) + ".zip")
-    if archive.is_file():
-        if replace:
-            archive.unlink()
-        else:
-            raise ValueError("This calculation package already exists")
+    if compress:
+        archive = directory / (safe_filename(name) + ".zip")
+        if archive.is_file():
+            if replace:
+                archive.unlink()
+            else:
+                raise ValueError("This calculation package already exists")
 
-    with tempfile.TemporaryDirectory() as td:
-        td = Path(td)
-        for resource in resources:
-            filename = uuid.uuid4().hex + ".npy"
-            create_numpy_structured_array(
-                iterable=resource["data"],
-                filepath=td / filename,
-                nrows=resource.get("nrows"),
-                format_function=resource.get("format_function"),
-            )
-            resource["dirpath"] = td
-            resource["filename"] = filename
-        datapackage = create_datapackage_metadata(
-            name=name, resources=resources, id_=id_, metadata=metadata
+        base_td = tempfile.TemporaryDirectory()
+        td = Path(base_td.name)
+    else:
+        td = directory
+
+    for resource in resources:
+        filename = uuid.uuid4().hex + ".npy"
+        create_numpy_structured_array(
+            iterable=resource["data"],
+            filepath=td / filename,
+            nrows=resource.get("nrows"),
+            format_function=resource.get("format_function"),
         )
-        with open(td / "datapackage.json", "w", encoding="utf-8") as f:
-            json.dump(datapackage, f, indent=2, ensure_ascii=False)
+        resource["dirpath"] = td
+        resource["filename"] = filename
+    datapackage = create_datapackage_metadata(
+        name=name, resources=resources, id_=id_, metadata=metadata
+    )
+    with open(td / "datapackage.json", "w", encoding="utf-8") as f:
+        json.dump(datapackage, f, indent=2, ensure_ascii=False)
 
+    if compress:
         with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zf:
             for file in td.iterdir():
                 if file.is_file():
                     zf.write(file, arcname=file.name)
-
-    return archive
+        del base_td
+        return archive
+    else:
+        return directory
