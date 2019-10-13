@@ -37,6 +37,26 @@ def chunked(iterable, chunk_size):
     return iter(lambda: list(itertools.islice(iterable, chunk_size)), [])
 
 
+def dictionary_formatter(row):
+    """Format processed array row from dictionary input"""
+    return (
+        row['row'],
+        # 1-d matrix
+        row.get('col', row['row']),
+        MAX_SIGNED_32BIT_INT,
+        MAX_SIGNED_32BIT_INT,
+        row.get("uncertainty_type", 0),
+        row['amount'],
+        row.get('loc', row['amount']),
+        row.get('scale', np.NaN),
+        row.get('shape', np.NaN),
+        row.get('minimum', np.NaN),
+        row.get('maximum', np.NaN),
+        row.get("negative", False),
+        row.get("flip", False)
+    )
+
+
 def create_numpy_structured_array(iterable, filepath, nrows=None, format_function=None):
     """"""
     if format_function is None:
