@@ -83,7 +83,11 @@ def create_numpy_structured_array(iterable, filepath, nrows=None, format_functio
         array = np.hstack(arrays)
 
     array.sort(order=("row_value", "col_value", "uncertainty_type", "amount"))
-    np.save(filepath, array, allow_pickle=False)
+    if filepath:
+        np.save(filepath, array, allow_pickle=False)
+        return filepath
+    else:
+        return array
 
 
 def create_datapackage_metadata(name, resources, id_=None, metadata=None):
@@ -160,11 +164,13 @@ def format_datapackage_resource(res):
         "mediatype": "application/octet-stream",
         "path": res["filename"],
         "name": res["name"],
-        "md5": md5(res["dirpath"] / res["filename"]),
         "profile": "data-resource",
         # Brightway specific
         "matrix": res["matrix"],
     }
+    # Not needed if in-memory
+    if res.get("dirpath"):
+        obj["md5"] = md5(res["dirpath"] / res["filename"])
     for key, value in res.items():
         if key not in obj and key not in SKIP:
             obj[key] = value
@@ -172,7 +178,7 @@ def format_datapackage_resource(res):
 
 
 def create_calculation_package(
-    directory, name, resources, id_=None, metadata=None, replace=True, compress=True
+    directory, name, resources, id_=None, metadata=None, replace=True, compress=True, in_memory=False
 ):
     """Create a calculation package for use in ``brightway_calc``.
 
@@ -208,8 +214,13 @@ def create_calculation_package(
         Absolute filepath to calculation package (zip file)
 
     """
-    directory = Path(directory)
-    assert directory.is_dir()
+    assert not (in_memory and compress), "In-memory zipfile creation not currently supported (see https://github.com/brightway-lca/brightway_calc/issues/1)"
+
+    if in_memory:
+        result, directory = {}, None
+    else:
+        directory = Path(directory)
+        assert directory.is_dir()
 
     if compress:
         archive = directory / (safe_filename(name) + ".zip")
@@ -226,19 +237,25 @@ def create_calculation_package(
 
     for resource in resources:
         filename = uuid.uuid4().hex + ".npy"
-        create_numpy_structured_array(
+        array = create_numpy_structured_array(
             iterable=resource["data"],
-            filepath=td / filename,
+            filepath=td / filename if td else None,
             nrows=resource.get("nrows"),
             format_function=resource.get("format_function"),
         )
         resource["dirpath"] = td
         resource["filename"] = filename
+        if in_memory:
+            result[filename] = array
+
     datapackage = create_datapackage_metadata(
         name=name, resources=resources, id_=id_, metadata=metadata
     )
-    with open(td / "datapackage.json", "w", encoding="utf-8") as f:
-        json.dump(datapackage, f, indent=2, ensure_ascii=False)
+    if in_memory:
+        result['datapackage'] = datapackage
+    else:
+        with open(td / "datapackage.json", "w", encoding="utf-8") as f:
+            json.dump(datapackage, f, indent=2, ensure_ascii=False)
 
     if compress:
         with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zf:
@@ -247,5 +264,7 @@ def create_calculation_package(
                     zf.write(file, arcname=file.name)
         del base_td
         return archive
+    elif in_memory:
+        return result
     else:
         return directory
