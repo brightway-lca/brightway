@@ -1,4 +1,3 @@
 appdirs
 peewee>=3.10
 pytest
-pytest-cov
