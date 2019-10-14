@@ -8,7 +8,7 @@ requirements = [
     'peewee',
 ]
 
-test_requirements = ['pytest', 'bw_default_backend']
+test_requirements = ['pytest']
 
 v_temp = {}
 with open("brightway_projects/version.py") as fp:

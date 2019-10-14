@@ -2,4 +2,3 @@ appdirs
 peewee>=3.10
 pytest
 pytest-cov
-git+https://github.com/brightway-lca/brightway-default-backend.git#egg=brightway-default-backend
