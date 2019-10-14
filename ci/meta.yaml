@@ -1,5 +1,5 @@
 package:
-  name: <your_library_name>-dev
+  name: brightway_projects-dev
   version: {{ environ['VERSION'] }}
 
 source:
@@ -19,14 +19,15 @@ requirements:
     - setuptools
   run:
     - python
-    - <other conda dependencies>
+    - appdirs
+    - peewee
 
 test:
   imports:
-    - {{ name }}
+    - brightway_projects
 
 about:
-  home: <Github repo URL>
+  home: "https://github.com/brightway-lca/brightway_projects"
   license: BSD License
-  summary: '<One line description>'
+  summary: 'Manager for Brightway LCA libraries and projects'
 license_family: BSD

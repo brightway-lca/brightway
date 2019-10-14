@@ -1,8 +1,5 @@
 appdirs
 peewee>=3.10
-stats_arrays
-numpy
 pytest
 pytest-cov
-python-coveralls
 git+https://github.com/brightway-lca/brightway-default-backend.git#egg=brightway-default-backend
