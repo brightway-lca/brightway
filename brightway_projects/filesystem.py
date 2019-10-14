@@ -3,11 +3,9 @@ from pathlib import Path
 import hashlib
 import os
 import re
-import appdirs
 import unicodedata
-import warnings
 
-re_slugify = re.compile("[^\w\s-]", re.UNICODE)
+re_slugify = re.compile(r"[^\w\s-]", re.UNICODE)
 
 
 def safe_filename(string, add_hash=True):
@@ -17,7 +15,7 @@ def safe_filename(string, add_hash=True):
 
     From http://stackoverflow.com/questions/295135/turn-a-string-into-a-valid-filename-in-python"""
     safe = re.sub(
-        "[-\s]+",
+        r"[-\s]+",
         "-",
         str(re_slugify.sub("", unicodedata.normalize("NFKD", str(string))).strip()),
     )
@@ -31,7 +29,7 @@ def safe_filename(string, add_hash=True):
 
 def create_dir(dirpath):
     """Create directory tree to ``dirpath``; ignore if already exists."""
-    dirpath.mkdir(parents=True, exist_ok=True)
+    Path(dirpath).mkdir(parents=True, exist_ok=True)
 
 
 def get_dir_size(dirpath):

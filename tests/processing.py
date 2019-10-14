@@ -146,14 +146,16 @@ def test_format_datapackage_resource():
 
 
 def test_calculation_package():
-    resources = [{
-        'name': 'first-resource',
-        'matrix': 'technosphere',
-        'data': [
-            tuple(list(range(11)) + [False, False]),
-            tuple(list(range(12, 23)) + [True, True]),
-        ],
-    }]
+    resources = [
+        {
+            "name": "first-resource",
+            "matrix": "technosphere",
+            "data": [
+                tuple(list(range(11)) + [False, False]),
+                tuple(list(range(12, 23)) + [True, True]),
+            ],
+        }
+    ]
     with tempfile.TemporaryDirectory() as td:
         fp = create_calculation_package(td, "test-package", resources)
         # Test data in fp

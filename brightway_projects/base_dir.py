@@ -16,7 +16,7 @@ def get_base_directories():
             )
         else:
             print(
-                "Using environment variable BRIGHTWAY2_DIR for data "
+                "Using environment variable BRIGHTWAY_DIR for data "
                 "directory:\n{}".format(envvar)
             )
             logs_dir = envvar / "logs"

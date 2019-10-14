@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from . import projects, project_database, backend_mapping
 from pathlib import Path
-from pathlib import Path
 import pytest
 import tempfile
 

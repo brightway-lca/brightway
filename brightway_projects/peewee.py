@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 from collections.abc import Iterable
 from pathlib import Path
-from peewee import SqliteDatabase, Model, TextField, BlobField
+from peewee import SqliteDatabase, TextField, BlobField
 import json
-import os
+
 
 abspath = lambda x: str(x.absolute()) if isinstance(x, Path) else x
 
@@ -22,14 +21,6 @@ class PathField(TextField):
 
     def python_value(self, value):
         return Path(value)
-
-
-class PickleField(BlobField):
-    def db_value(self, value):
-        return super().db_value(pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL))
-
-    def python_value(self, value):
-        return pickle.loads(bytes(value))
 
 
 class TupleField(BlobField):
