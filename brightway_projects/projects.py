@@ -3,8 +3,7 @@ from . import backend_mapping
 from .errors import MissingBackend
 from .filesystem import safe_filename, get_dir_size, create_dir
 from .peewee import JSONField, PathField
-from peewee import Model, TextField, BlobField, BooleanField, DoesNotExist
-import appdirs
+from peewee import Model, TextField, BooleanField, DoesNotExist
 import collections
 import os
 import shutil
@@ -26,7 +25,7 @@ class Project(Model):
 
     def __lt__(self, other):
         # Allow ordering
-        if not isinstance(other, ProjectDataset):
+        if not isinstance(other, Project):
             raise TypeError
         else:
             return self.name.lower() < other.name.lower()
@@ -113,7 +112,9 @@ class ProjectManager(collections.abc.Iterable):
             backend.deactivate_project(self.current)
         self.current = None
 
-    def create_project(self, name, backends=("default",), switch=True, default=False, **kwargs):
+    def create_project(
+        self, name, backends=("default",), switch=True, default=False, **kwargs
+    ):
         if name in self:
             print(
                 "This project already exists; use "
@@ -164,56 +165,29 @@ class ProjectManager(collections.abc.Iterable):
     #     if switch:
     #         self.set_current(new_name)
 
-    def delete_project(self, name):
-        """Delete project ``name``.
+    def delete_project(self, project):
+        """Delete project ``project``.
+
+        ``project`` can be a name (sstr) or an instance of ``Project``.
 
         Set the ``.enabled`` to ``False`` to exclude this project instead of deleting it."""
-        if name == self.current:
-            self.deactivate_project()
+        if not isinstance(project, Project):
+            try:
+                project = Project.get(Project.name == project)
+            except DoesNotExist:
+                raise ValueError("{} is not a project".format(project))
 
-        try:
-            obj = Project.get(Project.name == name)
-        except DoesNotExist:
-            raise ValueError("{} is not a project".format(name))
+        if project == self.current:
+            self.deactivate()
 
-        for backend in obj.backends_resolved():
-            backend.delete_project(obj)
+        for backend in project.backends_resolved():
+            backend.delete_project(project)
 
-        obj.delete_instance()
-        shutil.rmtree(obj.directory)
-
-    # def purge_deleted_directories(self):
-    #     """Delete project directories for projects which are no longer registered.
-
-    #     Returns number of directories deleted."""
-    #     registered = {safe_filename(obj.name) for obj in self}
-    #     bad_directories = [os.path.join(self._base_data_dir, dirname)
-    #                        for dirname in os.listdir(self._base_data_dir)
-    #                        if os.path.isdir(os.path.join(self._base_data_dir, dirname))
-    #                        and dirname not in registered]
-
-    #     for fp in bad_directories:
-    #         shutil.rmtree(fp)
-
-    #     return len(bad_directories)
+        project.delete_instance()
+        shutil.rmtree(project.directory)
 
     def report(self):
         """Give a report on current projects, backend, and directory sizes.
 
         Returns tuples of ``(project name, backend name, and directory size (GB))``."""
         return sorted([(x.name, x.backends, get_dir_size(x.directory)) for x in self])
-
-    # def use_temp_directory(self):
-    #     """Point the ProjectManager towards a temporary directory instead of `user_data_dir`.
-
-    #     Used exclusively for tests."""
-    #     if not self._is_temp_dir:
-    #         self._orig_base_data_dir = self._base_data_dir
-    #         self._orig_base_logs_dir = self._base_logs_dir
-    #     temp_dir = tempfile.mkdtemp()
-    #     self._base_data_dir = os.path.join(temp_dir, "data")
-    #     self._base_logs_dir = os.path.join(temp_dir, "logs")
-    #     self.db.change_path(':memory:')
-    #     self.select("tests-default")
-    #     self._is_temp_dir = True
-    #     return temp_dir

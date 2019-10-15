@@ -8,14 +8,14 @@ import tempfile
 class FakeBackend:
     __brightway_common_api__ = True
     __brightway_common_api_version__ = 1
-    activated = deactivated = created = copied = None
+    activated = created = copied = None
     deleted = exported = imported = None
 
     def activate_project(self, obj):
         self.activated = obj
 
     def deactivate_project(self, obj):
-        self.deactivated = obj
+        self.activated = None
 
     def create_project(self, obj):
         self.created = obj
@@ -36,7 +36,7 @@ class FakeBackend:
         self.imported_filepath = filepath
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def bwtest(monkeypatch):
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
@@ -45,6 +45,9 @@ def bwtest(monkeypatch):
         ld.mkdir()
         monkeypatch.setattr(projects, "base_dir", td)
         monkeypatch.setattr(projects, "base_log_dir", ld)
+        monkeypatch.setattr(projects, "current", None)
         monkeypatch.setitem(backend_mapping, "tests", FakeBackend())
         yield td
+        for key in list(backend_mapping):
+            del backend_mapping[key]
         project_database.close()

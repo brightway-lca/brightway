@@ -12,7 +12,7 @@ def clean():
 
 def test_clean_environment_beginning():
     with pytest.raises(KeyError):
-        os.environ['BRIGHTWAY_DIR']
+        os.environ["BRIGHTWAY_DIR"]
 
 
 def test_from_env_var(clean):
@@ -23,14 +23,14 @@ def test_from_env_var(clean):
 
 
 def test_invalid_env_var(clean):
-    os.environ['BRIGHTWAY_DIR'] = "nothing special"
+    os.environ["BRIGHTWAY_DIR"] = "nothing special"
     with pytest.raises(OSError):
         get_base_directories()
 
 
 def test_clean_environment_ending():
     with pytest.raises(KeyError):
-        os.environ['BRIGHTWAY_DIR']
+        os.environ["BRIGHTWAY_DIR"]
 
 
 def test_directories():
