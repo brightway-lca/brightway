@@ -113,7 +113,7 @@ class ProjectManager(collections.abc.Iterable):
             backend.deactivate_project(self.current)
         self.current = None
 
-    def create(self, name, backends=("default",), switch=True, default=False, **kwargs):
+    def create_project(self, name, backends=("default",), switch=True, default=False, **kwargs):
         if name in self:
             print(
                 "This project already exists; use "
