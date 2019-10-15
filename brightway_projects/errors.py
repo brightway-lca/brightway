@@ -20,3 +20,15 @@ class DuplicateDtypeLabel(BrightwayError):
     """Dtype has conflicting labels"""
 
     pass
+
+
+class InconsistentFields(BrightwayError):
+    """Given fields not the same for each element"""
+
+    pass
+
+
+class NonUnique(BrightwayError):
+    """Nonunique elements when uniqueness is required"""
+
+    pass

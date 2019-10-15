@@ -50,7 +50,14 @@ def format_calculation_resource(res):
 
 
 def create_calculation_package(
-    directory, name, resources, id_=None, metadata=None, replace=True, compress=True, in_memory=False
+    directory,
+    name,
+    resources,
+    id_=None,
+    metadata=None,
+    replace=True,
+    compress=True,
+    in_memory=False,
 ):
     """Create a calculation package for use in ``brightway_calc``.
 
@@ -86,7 +93,9 @@ def create_calculation_package(
         Absolute filepath to calculation package (zip file)
 
     """
-    assert not (in_memory and compress), "In-memory zipfile creation not currently supported (see https://github.com/brightway-lca/brightway_calc/issues/1)"
+    assert not (
+        in_memory and compress
+    ), "In-memory zipfile creation not currently supported (see https://github.com/brightway-lca/brightway_calc/issues/1)"
 
     if in_memory:
         result, directory = {}, None
@@ -121,10 +130,14 @@ def create_calculation_package(
             result[filename] = array
 
     datapackage = create_datapackage_metadata(
-        name=name, resources=resources, resource_function=format_calculation_resource, id_=id_, metadata=metadata
+        name=name,
+        resources=resources,
+        resource_function=format_calculation_resource,
+        id_=id_,
+        metadata=metadata,
     )
     if in_memory:
-        result['datapackage'] = datapackage
+        result["datapackage"] = datapackage
     else:
         with open(td / "datapackage.json", "w", encoding="utf-8") as f:
             json.dump(datapackage, f, indent=2, ensure_ascii=False)

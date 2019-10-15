@@ -36,24 +36,26 @@ def chunked(iterable, chunk_size):
 def dictionary_formatter(row):
     """Format processed array row from dictionary input"""
     return (
-        row['row'],
+        row["row"],
         # 1-d matrix
-        row.get('col', row['row']),
+        row.get("col", row["row"]),
         MAX_SIGNED_32BIT_INT,
         MAX_SIGNED_32BIT_INT,
         row.get("uncertainty_type", 0),
-        row['amount'],
-        row.get('loc', row['amount']),
-        row.get('scale', np.NaN),
-        row.get('shape', np.NaN),
-        row.get('minimum', np.NaN),
-        row.get('maximum', np.NaN),
+        row["amount"],
+        row.get("loc", row["amount"]),
+        row.get("scale", np.NaN),
+        row.get("shape", np.NaN),
+        row.get("minimum", np.NaN),
+        row.get("maximum", np.NaN),
         row.get("negative", False),
-        row.get("flip", False)
+        row.get("flip", False),
     )
 
 
-def create_numpy_structured_array(iterable, filepath=None, nrows=None, format_function=None):
+def create_numpy_structured_array(
+    iterable, filepath=None, nrows=None, format_function=None
+):
     """"""
     if format_function is None:
         format_function = lambda x, y: x
@@ -86,7 +88,9 @@ def create_numpy_structured_array(iterable, filepath=None, nrows=None, format_fu
         return array
 
 
-def create_datapackage_metadata(name, resources, resource_function, id_=None, metadata=None):
+def create_datapackage_metadata(
+    name, resources, resource_function, id_=None, metadata=None
+):
     """Format metadata for a processed array datapackage.
 
     All metadata elements should follow the `datapackage specification <https://frictionlessdata.io/specs/data-package/>`__.
