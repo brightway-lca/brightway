@@ -6,7 +6,7 @@ from brightway_projects.processing import (
     create_calculation_package,
     create_datapackage_metadata,
     create_numpy_structured_array,
-    format_datapackage_resource,
+    format_calculation_resource,
     NAME_RE,
 )
 from pathlib import Path
@@ -89,7 +89,7 @@ def test_create_array_chunk_data():
 
 def test_format_datapackage_metadata():
     expected = {"profile": "data-package", "name": "a", "id": "b", "licenses": "c"}
-    result = create_datapackage_metadata("a", [], id_="b", metadata={"licenses": "c"})
+    result = create_datapackage_metadata("a", [], resource_function=format_calculation_resource, id_="b", metadata={"licenses": "c"})
     assert result["created"]
     for k, v in expected.items():
         assert result[k] == v
@@ -101,13 +101,13 @@ def test_name_re():
 
 
 def test_format_datapackage_metadata_no_id():
-    result = create_datapackage_metadata("a", [])
+    result = create_datapackage_metadata("a", [], resource_function=format_calculation_resource)
     assert result["id"]
     assert len(result["id"]) > 16
 
 
 def test_format_datapackage_metadata_default_licenses():
-    result = create_datapackage_metadata("a", [])
+    result = create_datapackage_metadata("a", [], resource_function=format_calculation_resource)
     assert result["licenses"] == [
         {
             "name": "ODC-PDDL-1.0",
@@ -119,10 +119,10 @@ def test_format_datapackage_metadata_default_licenses():
 
 def test_format_datapackage_metadata_invalid_name():
     with pytest.raises(InvalidName):
-        create_datapackage_metadata("woo!", {})
+        create_datapackage_metadata("woo!", {}, resource_function=format_calculation_resource)
 
 
-def test_format_datapackage_resource():
+def test_format_calculation_resource():
     given = {
         "dirpath": fixtures_dir,
         "filename": "basic_array.npy",
@@ -142,7 +142,7 @@ def test_format_datapackage_resource():
         "description": "some words",
         "foo": "bar",
     }
-    assert format_datapackage_resource(given) == expected
+    assert format_calculation_resource(given) == expected
 
 
 def test_calculation_package():
