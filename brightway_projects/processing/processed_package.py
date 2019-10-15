@@ -6,6 +6,16 @@ def greedy_set_cover(data, exclude=None):
 
     Feature selection is a well known problem, and is analogous to the `set cover problem <https://en.wikipedia.org/wiki/Set_cover_problem>`__, for which there is a `well known heuristic <https://en.wikipedia.org/wiki/Set_cover_problem#Greedy_algorithm>`__.
 
+    Example:
+
+        data = [
+            {'a': 1, 'b': 2, 'c': 3},
+            {'a': 2, 'b': 2, 'c': 3},
+            {'a': 1, 'b': 2, 'c': 4},
+        ]
+        greedy_set_cover(data)
+        >>> {'a', 'c'}
+
     Args:
         data (iterable): List of dictionaries with the same fields.
         exclude (iterable): Fields to exclude during search for uniqueness. ``id`` is Always excluded.
@@ -16,11 +26,26 @@ def greedy_set_cover(data, exclude=None):
     Raises:
         NonUnique: The given fields are not enough to ensure uniqueness
     """
-    if exclude is None:
-        exclude = {"id"}
-    else:
-        exclude = set(exclude)
-        exclude.add("id")
+    exclude = set([]) if exclude is None else set(exclude)
+    exclude.add("id")
+
+    fields = {field for obj in data for field in obj if field not in exclude}
+    chosen = set([])
+
+    def values_for_fields(data, exclude, fields):
+        return sorted([(len({obj[field] for obj in data}), field) for field in fields], reverse=True)
+
+    def coverage(data, chosen):
+        return len({tuple([obj[field] for field in chosen]) for obj in data})
+
+    while coverage(data, chosen) != len(data):
+        if not fields:
+            raise NonUnique
+        next_field = values_for_fields(data, exclude, fields)[0][1]
+        fields.remove(next_field)
+        chosen.add(next_field)
+
+    return chosen
 
 
 def as_unique_attributes(data, exclude=None, include=None):
@@ -46,7 +71,7 @@ def as_unique_attributes(data, exclude=None, include=None):
     include = set([]) if include is None else set(include)
     fields = greedy_set_cover(data, exclude)
 
-    if len({set(obj.keys()) for obj in data}) > 1:
+    if len({tuple(sorted(obj.keys())) for obj in data}) > 1:
         raise InconsistentFields
 
     def formatter(obj, fields, include):
@@ -56,7 +81,7 @@ def as_unique_attributes(data, exclude=None, include=None):
             if (key in fields or key in include or key == "id")
         }
 
-    return (fields, [formatter(obj, fields, include) for obj in data])
+    return (fields.union(include).union({'id'}), [formatter(obj, fields, include) for obj in data])
 
 
 def create_processed_datapackage(
