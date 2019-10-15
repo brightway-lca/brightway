@@ -50,14 +50,13 @@ def format_calculation_resource(res):
 
 
 def create_calculation_package(
-    directory,
     name,
     resources,
+    path=None,
     id_=None,
     metadata=None,
     replace=True,
     compress=True,
-    in_memory=False,
 ):
     """Create a calculation package for use in ``brightway_calc``.
 
@@ -94,17 +93,17 @@ def create_calculation_package(
 
     """
     assert not (
-        in_memory and compress
+        path is None and compress
     ), "In-memory zipfile creation not currently supported (see https://github.com/brightway-lca/brightway_calc/issues/1)"
 
-    if in_memory:
-        result, directory = {}, None
+    if path:
+        path = Path(path)
+        assert path.is_dir()
     else:
-        directory = Path(directory)
-        assert directory.is_dir()
+        result = {}
 
-    if compress:
-        archive = directory / (safe_filename(name) + ".zip")
+    if path and compress:
+        archive = path / (safe_filename(name) + ".zip")
         if archive.is_file():
             if replace:
                 archive.unlink()
@@ -114,19 +113,23 @@ def create_calculation_package(
         base_td = tempfile.TemporaryDirectory()
         td = Path(base_td.name)
     else:
-        td = directory
+        td = None
 
     for resource in resources:
         filename = uuid.uuid4().hex + ".npy"
+        if path is None:
+            filepath = None
+        else:
+            filepath = (td if compress else path) / filename
         array = create_numpy_structured_array(
             iterable=resource["data"],
-            filepath=td / filename if td else None,
+            filepath=filepath,
             nrows=resource.get("nrows"),
             format_function=resource.get("format_function"),
         )
         resource["dirpath"] = td
         resource["filename"] = filename
-        if in_memory:
+        if path is None:
             result[filename] = array
 
     datapackage = create_datapackage_metadata(
@@ -136,10 +139,11 @@ def create_calculation_package(
         id_=id_,
         metadata=metadata,
     )
-    if in_memory:
+    if path is None:
         result["datapackage"] = datapackage
     else:
-        with open(td / "datapackage.json", "w", encoding="utf-8") as f:
+        dirpath = td if compress else path
+        with open(dirpath / "datapackage.json", "w", encoding="utf-8") as f:
             json.dump(datapackage, f, indent=2, ensure_ascii=False)
 
     if compress:
@@ -149,7 +153,7 @@ def create_calculation_package(
                     zf.write(file, arcname=file.name)
         del base_td
         return archive
-    elif in_memory:
+    elif path is None:
         return result
     else:
-        return directory
+        return path
