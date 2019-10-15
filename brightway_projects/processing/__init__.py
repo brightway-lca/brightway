@@ -8,4 +8,9 @@ from .utils import (
     create_numpy_structured_array,
     create_datapackage_metadata,
 )
-from .processed_package import create_processed_datapackage, greedy_set_cover, as_unique_attributes
+from .processed_package import (
+    create_processed_datapackage,
+    greedy_set_cover,
+    as_unique_attributes,
+    format_processed_resource,
+)

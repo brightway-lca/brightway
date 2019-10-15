@@ -50,15 +50,11 @@ def format_calculation_resource(res):
 
 
 def create_calculation_package(
-    name,
-    resources,
-    path=None,
-    id_=None,
-    metadata=None,
-    replace=True,
-    compress=True,
+    name, resources, path=None, id_=None, metadata=None, replace=True, compress=True
 ):
     """Create a calculation package for use in ``brightway_calc``.
+
+    If ``path`` is ``None``, then the package is created in memory and returned as a dict. Otherwise, the datapackage is stored to disk, either as a zipfile (if ``compress``) or as a directory. The directory should already exist.
 
     The ``format_function`` should return a tuple of data that fits the structured array datatype, i.e.
 
@@ -84,9 +80,10 @@ def create_calculation_package(
             data (iterable): The numerical data to be stored
             nrows (int, optional):  The number of rows in ``array``. Will be counted if not provided, but with an efficiency penalty.
             format_function (callable, optional): Function that formats data to structured array columns.
+        path (str, Path, or None): Location to store the created package.
         id_ (str, optional): Unique ID of this calculation package
         metadata (dict, optional): Additional metadata such as licenses, RNG seeds, etc.
-        repalce (bool, optional): Replace an existing calculation package with the same name
+        replace (bool, optional): Replace an existing calculation package with the same name and path
 
     Returns:
         Absolute filepath to calculation package (zip file)

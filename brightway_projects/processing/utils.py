@@ -89,7 +89,7 @@ def create_numpy_structured_array(
 
 
 def create_datapackage_metadata(
-    name, resources, resource_function, id_=None, metadata=None
+    name, resources, resource_function=None, id_=None, metadata=None
 ):
     """Format metadata for a processed array datapackage.
 
@@ -116,6 +116,9 @@ def create_datapackage_metadata(
             "title": "Open Data Commons Public Domain Dedication and License v1.0",
         }
     ]
+
+    if resource_function is None:
+        resource_function = lambda x: x
 
     if not NAME_RE.match(name):
         raise InvalidName(
