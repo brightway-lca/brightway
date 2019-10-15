@@ -33,7 +33,7 @@ def chunked(iterable, chunk_size):
     return iter(lambda: list(itertools.islice(iterable, chunk_size)), [])
 
 
-def dictionary_formatter(row):
+def dictionary_formatter(row, dtype=None):
     """Format processed array row from dictionary input"""
     return (
         row["row"],
@@ -54,33 +54,36 @@ def dictionary_formatter(row):
 
 
 def create_numpy_structured_array(
-    iterable, filepath=None, nrows=None, format_function=None
+    iterable, filepath=None, nrows=None, format_function=None, dtype=COMMON_DTYPE
 ):
     """"""
     if format_function is None:
         format_function = lambda x, y: x
 
     if nrows:
-        array = np.zeros(nrows, dtype=COMMON_DTYPE)
+        array = np.zeros(nrows, dtype=dtype)
         for i, row in enumerate(iterable):
             if i > (nrows - 1):
                 raise ValueError("More rows than `nrows`")
-            array[i] = format_function(row, COMMON_DTYPE)
+            array[i] = format_function(row, dtype)
     else:
         arrays, BUCKET = [], 25000
-        array = np.zeros(BUCKET, dtype=COMMON_DTYPE)
+        array = np.zeros(BUCKET, dtype=dtype)
         for chunk in chunked(iterable, BUCKET):
             for i, row in enumerate(chunk):
-                array[i] = format_function(row, COMMON_DTYPE)
+                array[i] = format_function(row, dtype)
             if i < BUCKET - 1:
-                array = array[: i + 1]
+                array = array[:i + 1]
                 arrays.append(array)
             else:
                 arrays.append(array)
-                array = np.zeros(BUCKET, dtype=COMMON_DTYPE)
+                array = np.zeros(BUCKET, dtype=dtype)
         array = np.hstack(arrays)
 
-    array.sort(order=("row_value", "col_value", "uncertainty_type", "amount"))
+    sort_fields = ("row_value", "col_value", "uncertainty_type", "amount", "negative", "flip")
+    dtype_fields = {x[0] for x in dtype}
+    order = [x for x in sort_fields if x in dtype_fields]
+    array.sort(order=order)
     if filepath:
         np.save(filepath, array, allow_pickle=False)
         return filepath
