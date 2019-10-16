@@ -1,5 +1,5 @@
 from ..filesystem import md5, safe_filename
-from .utils import create_datapackage_metadata, create_numpy_structured_array
+from .utils import create_datapackage_metadata, create_numpy_structured_array, dictionary_formatter
 from pathlib import Path
 import json
 import tempfile
@@ -16,8 +16,10 @@ def format_calculation_resource(res):
 
         name (str): Simple name or identifier to be used for this matrix data
         matrix (str): The name of the matrix to build. See the documentation for ``bw_calc`` for more details.
+        data (iterator): Iterator to be fed into ``format_function`` to generate array rows.
         nrows (int, optional): Number of rows in array.
         path (str, optional): Filename for saved Numpy array
+        format_function (callable, optional):  Function to call on each row in ``data`` to put elements in correct type and order for insertion into structured array.
 
     ``res`` can also have `optional keys <https://frictionlessdata.io/specs/data-resource/>`__ like ``description``, and ``title``.
 
@@ -125,8 +127,7 @@ def create_calculation_package(
             iterable=resource["data"],
             filepath=filepath,
             nrows=resource.pop("nrows", None),
-            # TODO: Need default formatter
-            format_function=resource.get("format_function"),
+            format_function=resource.pop("format_function", dictionary_formatter),
         )
         if path is None:
             result[filename] = array
