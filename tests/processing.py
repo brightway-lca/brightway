@@ -139,8 +139,7 @@ def test_format_datapackage_metadata_invalid_name():
 
 def test_format_calculation_resource():
     given = {
-        "dirpath": fixtures_dir,
-        "filename": "basic_array.npy",
+        "path": "basic_array.npy",
         "name": "test-name",
         "matrix": "technosphere",
         "description": "some words",
@@ -151,7 +150,6 @@ def test_format_calculation_resource():
         "mediatype": "application/octet-stream",
         "path": "basic_array.npy",
         "name": "test-name",
-        "md5": "45aebe85c3a7b11d0427a98c07a4b90d",
         "profile": "data-resource",
         "matrix": "technosphere",
         "description": "some words",
@@ -164,6 +162,7 @@ def test_calculation_package():
     resources = [
         {
             "name": "first-resource",
+            "path": "some-array.npy",
             "matrix": "technosphere",
             "data": [
                 tuple(list(range(11)) + [False, False]),

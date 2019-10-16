@@ -10,12 +10,14 @@ import zipfile
 def format_calculation_resource(res):
     """Format metadata for a `datapackage resource <https://frictionlessdata.io/specs/data-resource/>`__.
 
+    ..note:: This function is for use together with ``create_calculation_package``, it doesn't create valid `datapackage resources <https://frictionlessdata.io/specs/data-resource/>`__.
+
     ``res`` should be a dictionary with the following keys:
 
         name (str): Simple name or identifier to be used for this matrix data
-        filename (str): Filename for saved Numpy array
         matrix (str): The name of the matrix to build. See the documentation for ``bw_calc`` for more details.
-        dirpath (pathlib.Path): The directory where the datapackage and resource files are saved.
+        nrows (int, optional): Number of rows in array.
+        path (str, optional): Filename for saved Numpy array
 
     ``res`` can also have `optional keys <https://frictionlessdata.io/specs/data-resource/>`__ like ``description``, and ``title``.
 
@@ -29,20 +31,20 @@ def format_calculation_resource(res):
         * https://json-schema.org/
 
     """
-    SKIP = {"dirpath", "filename", "data", "nrows", "format_function"}
     obj = {
         # Datapackage generic
         "format": "npy",
         "mediatype": "application/octet-stream",
-        "path": res["filename"],
+        "path": res.get("path") or uuid.uuid4().hex,
         "name": res["name"],
         "profile": "data-resource",
         # Brightway specific
         "matrix": res["matrix"],
     }
-    # Not needed if in-memory
-    if res.get("dirpath"):
-        obj["md5"] = md5(res["dirpath"] / res["filename"])
+    # Leave separate because maybe want to add to later
+    SKIP = set(obj)
+    if not obj['path'].endswith(".npy"):
+        obj['path'] += ".npy"
     for key, value in res.items():
         if key not in obj and key not in SKIP:
             obj[key] = value
@@ -50,7 +52,7 @@ def format_calculation_resource(res):
 
 
 def create_calculation_package(
-    name, resources, path=None, id_=None, metadata=None, replace=True, compress=True
+    name, resources, path=None, id_=None, metadata=None, replace=True, compress=True, **kwargs
 ):
     """Create a calculation package for use in ``brightway_calc``.
 
@@ -75,6 +77,7 @@ def create_calculation_package(
     Args:
         name (str): Name of this calculation package
         resources (iterable): Resources is an iterable of dictionaries with the keys:
+            TODO: Update based on above changes
             name (str): Simple name or identifier to be used for this matrix data
             matrix (str): The name of the matrix to build. See the documentation for ``bw_calc`` for more details.
             data (iterable): The numerical data to be stored
@@ -113,7 +116,7 @@ def create_calculation_package(
         td = None
 
     for resource in resources:
-        filename = uuid.uuid4().hex + ".npy"
+        filename = resource["path"]
         if path is None:
             filepath = None
         else:
@@ -121,13 +124,14 @@ def create_calculation_package(
         array = create_numpy_structured_array(
             iterable=resource["data"],
             filepath=filepath,
-            nrows=resource.get("nrows"),
+            nrows=resource.pop("nrows", None),
+            # TODO: Need default formatter
             format_function=resource.get("format_function"),
         )
-        resource["dirpath"] = td
-        resource["filename"] = filename
         if path is None:
             result[filename] = array
+        else:
+            resource["md5"] = md5(filepath)
 
     datapackage = create_datapackage_metadata(
         name=name,
