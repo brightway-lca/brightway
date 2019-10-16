@@ -22,8 +22,8 @@ before_install:
       export PATH="$HOME/miniconda/bin:$PATH";
       hash -r;
       conda config --set always_yes yes --set changeps1 no;
+      conda update -n base -c defaults conda;
       conda config --append channels conda-forge;
-      conda update conda;
       conda info -a;
       echo $(python --version);
     fi

@@ -11,7 +11,7 @@ install:
     - cmd: conda update -y -q conda
     - cmd: conda config --add channels conda-forge
     - cmd: conda install -y -q appdirs numpy scipy peewee pytest pip
-    - cmd: pip install --no-cache-dir -r ci/test-requirements.txt
+    - cmd: pip install -e .
 
 build: false
 
