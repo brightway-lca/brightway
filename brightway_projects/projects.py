@@ -109,7 +109,7 @@ class ProjectManager(collections.abc.Iterable):
     def deactivate(self):
         """Deactivate the current project with its backends"""
         for backend in self.current.backends_resolved():
-            backend.deactivate_project(self.current)
+            backend.deactivate_project()
         self.current = None
 
     def create_project(

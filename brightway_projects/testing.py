@@ -14,7 +14,7 @@ class FakeBackend:
     def activate_project(self, obj):
         self.activated = obj
 
-    def deactivate_project(self, obj):
+    def deactivate_project(self):
         self.activated = None
 
     def create_project(self, obj):
@@ -49,5 +49,9 @@ def bwtest(monkeypatch):
         monkeypatch.setitem(backend_mapping, "tests", FakeBackend())
         yield td
         for key in list(backend_mapping):
+            try:
+                backend_mapping[key].deactivate_project()
+            except:
+                pass
             del backend_mapping[key]
         project_database.close()
