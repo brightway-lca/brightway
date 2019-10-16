@@ -52,9 +52,6 @@ class SubstitutableDatabase(object):
         self.close()
         self._create_database(filepath)
 
-    def _add_table(self, model):
-        self._tables.append(model)
-
     def _vacuum(self):
         print("Vacuuming database ")
         self.execute_sql("VACUUM;")

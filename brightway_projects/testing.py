@@ -49,9 +49,6 @@ def bwtest(monkeypatch):
         monkeypatch.setitem(backend_mapping, "tests", FakeBackend())
         yield td
         for key in list(backend_mapping):
-            try:
-                backend_mapping[key].deactivate_project()
-            except:
-                pass
+            backend_mapping[key].deactivate_project()
             del backend_mapping[key]
         project_database.close()

@@ -141,7 +141,7 @@ class ProjectManager(collections.abc.Iterable):
         )
 
         for backend in obj.backends_resolved():
-            if getattr(backend, "__brightway_common_api__"):
+            if getattr(backend, "__brightway_common_api__", None):
                 backend.create_project(obj, **kwargs)
 
         if switch:

@@ -19,6 +19,16 @@ def test_project_model_create(bwtest):
         Project.create(name="foo", directory=td)
 
 
+def test_project_model_comparison(bwtest):
+    with tempfile.TemporaryDirectory() as td:
+        p1 = Project.create(name="foo", directory=td)
+        p2 = Project.create(name="bar", directory=td)
+        assert p2 < p1
+
+    with pytest.raises(TypeError):
+        p1 < 42
+
+
 def test_project_model_str_repr(bwtest):
     with tempfile.TemporaryDirectory() as td:
         p = Project.create(name="foo", directory=td)
