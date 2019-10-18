@@ -96,6 +96,8 @@ class ProjectManager(collections.abc.Iterable):
         return self.current.directory if self.current else None
 
     def select(self, name):
+        if name not in self:
+            raise ValueError("Project f{name} doesn't exist")
         if self.current:
             self.deactivate()
         self.current = Project.get(name=name)
