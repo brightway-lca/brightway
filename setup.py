@@ -20,6 +20,7 @@ setup(
     version=version,
     description='Management of projects in the Brightway Life Cycle Asssessment framework',
     long_description=open(path.join(here, "README.md")).read(),
+    long_description_content_type="text/markdown",
     url='https://github.com/brightway-lca/brightway_projects',
     author='Chris Mutel',
     author_email='cmutel@gmail.com',
