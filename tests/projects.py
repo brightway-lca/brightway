@@ -157,6 +157,11 @@ def test_select_project(bwtest):
     assert projects.current.name == "foo"
 
 
+def test_select_project_doesnt_exist(bwtest):
+    backend = backend_mapping["tests"]
+    with pytest.raises(ValueError):
+        projects.select("foo")
+
 # .activate, .deactivate
 
 
@@ -192,6 +197,20 @@ def test_create_project_creates_dir(bwtest):
 def test_create_project_already_exists(bwtest):
     projects.create_project("foo", backends=["tests"])
     assert projects.create_project("foo", backends=["tests"]) is None
+
+
+def test_create_project_without_backends(bwtest):
+    for key in list(backend_mapping):
+        del backend_mapping[key]
+    with pytest.raises(MissingBackend):
+        projects.create_project("foo")
+
+
+def test_create_project_without_backends(bwtest):
+    for key in list(backend_mapping):
+        del backend_mapping[key]
+    with pytest.raises(MissingBackend):
+        projects.create_project("foo", backends=None)
 
 
 @pytest.mark.skipif(windows, reason="Windows hates fun")

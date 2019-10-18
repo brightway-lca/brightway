@@ -128,6 +128,9 @@ class ProjectManager(collections.abc.Iterable):
             raise MissingBackend(
                 "No `default` backend available; " "Must specify a project backend."
             )
+        for backend in backends:
+            if backend not in backend_mapping:
+                raise MissingBackend(f"Backend {backend} missing")
 
         dirpath = self.base_dir / safe_filename(name)
         dirpath.mkdir()
