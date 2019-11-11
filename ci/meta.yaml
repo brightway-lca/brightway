@@ -1,5 +1,5 @@
 package:
-  name: brightway_projects-dev
+  name: bw_projects-dev
   version: {{ environ['VERSION'] }}
 
 source:
@@ -24,10 +24,10 @@ requirements:
 
 test:
   imports:
-    - brightway_projects
+    - bw_projects
 
 about:
-  home: "https://github.com/brightway-lca/brightway_projects"
+  home: "https://github.com/brightway-lca/bw_projects"
   license: BSD License
   summary: 'Manager for Brightway LCA libraries and projects'
 license_family: BSD
