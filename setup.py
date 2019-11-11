@@ -10,18 +10,18 @@ requirements = [
 test_requirements = ['pytest']
 
 v_temp = {}
-with open("brightway_projects/version.py") as fp:
+with open("bw_projects/version.py") as fp:
     exec(fp.read(), v_temp)
 version = ".".join((str(x) for x in v_temp['version']))
 
 
 setup(
-    name='brightway_projects',
+    name='bw_projects',
     version=version,
     description='Management of projects in the Brightway Life Cycle Asssessment framework',
     long_description=open(path.join(here, "README.md")).read(),
     long_description_content_type="text/markdown",
-    url='https://github.com/brightway-lca/brightway_projects',
+    url='https://github.com/brightway-lca/bw_projects',
     author='Chris Mutel',
     author_email='cmutel@gmail.com',
     license="NewBSD 3-clause; LICENSE",

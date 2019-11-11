@@ -1,4 +1,4 @@
-from brightway_projects.filesystem import safe_filename, get_dir_size, md5
+from bw_projects.filesystem import safe_filename, get_dir_size, md5
 from pathlib import Path
 
 fixtures_dir = Path(__file__, "..").resolve() / "fixtures"

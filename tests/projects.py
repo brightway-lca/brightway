@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from brightway_projects import projects, Project, backend_mapping
-from brightway_projects.projects import ProjectManager
-from brightway_projects.errors import MissingBackend
-from brightway_projects.testing import bwtest
+from bw_projects import projects, Project, backend_mapping
+from bw_projects.projects import ProjectManager
+from bw_projects.errors import MissingBackend
+from bw_projects.testing import bwtest
 import os
 import platform
 import pytest

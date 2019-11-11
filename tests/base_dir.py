@@ -1,4 +1,4 @@
-from brightway_projects.base_dir import get_base_directories
+from bw_projects.base_dir import get_base_directories
 import os
 import pytest
 import tempfile

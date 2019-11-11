@@ -1,4 +1,4 @@
-from brightway_projects.peewee import (
+from bw_projects.peewee import (
     JSONField,
     PathField,
     SubstitutableDatabase,

@@ -1,5 +1,5 @@
-import brightway_projects
+import bw_projects
 
 
 def test_version():
-    assert brightway_projects.__version__
+    assert bw_projects.__version__
